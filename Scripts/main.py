@@ -126,29 +126,26 @@ def consultarSimplex(ids,fi,ff):
         response = requests.post(url, data=form_data, verify=False)
         response.raise_for_status()  # Lanza excepción si hay error HTTP
         datosSimplex = response.json()
-
-        valores = [datosSimplex[0]["venta"],
-                    datosSimplex[5]["venta"],
-                    datosSimplex[10]["venta"],
-                    datosSimplex[15]["venta"],
-                    datosSimplex[20]["venta"],
-                    datosSimplex[25]["venta"],
-                    datosSimplex[30]["venta"]]
-        # Crear DataFrame
+        
+        valores = [] 
+        filas_dem = []
+        index2 = 0 
+        index = 0
+        for d in dias_semana:
+            multiplicador = 1 
+            valores.append(((datosSimplex[index2]["venta"])*multiplicador))
+            index2 = index2 + 5
+            for b in bloques:
+                filas_dem.append({"Día": d, "Bloque": b, "🍳 Cmds Cocina": datosSimplex[index]["alimentos"]*multiplicador, "🍳 Extra Cocina": 0.0, "🍔 Cmds Salón": datosSimplex[index]["salon"]*multiplicador, "🍔 Extra Salón": 0.0, "🍺 Cmds Barra": datosSimplex[index]["bebidas"]*multiplicador, "🍺 Extra Barra": 0.0})
+                index = index + 1
+        st.session_state.df_demanda = pd.DataFrame(filas_dem)
+         # Crear DataFrame
         dft = pd.DataFrame({
             'Día': dias_semana,
             'Venta Proyectada ($)': valores
         })
         dft['Día'] = dft['Día'].str.strip()
         st.session_state.df_ventas = dft
-
-        filas_dem = []
-        for d in dias_semana:
-            index = 0; 
-            for b in bloques:
-                filas_dem.append({"Día": d, "Bloque": b, "🍳 Cmds Cocina": datosSimplex[index]["alimentos"], "🍳 Extra Cocina": 0.0, "🍔 Cmds Salón": datosSimplex[index]["salon"], "🍔 Extra Salón": 0.0, "🍺 Cmds Barra": datosSimplex[index]["bebidas"], "🍺 Extra Barra": 0.0})
-                index = index + 1
-        st.session_state.df_demanda = pd.DataFrame(filas_dem)
     except requests.exceptions.RequestException as e:
         print('Error en la petición:', e)
     
@@ -566,6 +563,7 @@ with tab_carga:
         
     with t_dem:
         st.markdown("""<div style="background-color: #FFF9C4; padding: 15px; border-left: 5px solid #FBC02D; border-radius: 8px; margin-top: 5px; margin-bottom: 20px;"><p style="font-size: 14px; color: #333; margin: 0;"><b>💡 Guía:</b> Captura cuántas comandas estimas procesar por bloque de horas (esto mide tu "Rush"). <b>Nota:</b> El Panel Rápido solo inyecta horas en apertura (Bloque 1) o cierre (Bloque 5). Si ocupas horas extra en otro horario, captúralo manual en la tabla.</p></div>""", unsafe_allow_html=True)
+        st.markdown("""<div style="background-color: #FFF9C4; padding: 15px; border-left: 5px solid #FBC02D; border-radius: 8px; margin-top: 5px; margin-bottom: 20px;"><p style="font-size: 14px; color: #333; margin: 0;"><b>💡 Guía 2:</b> Demanda operativa de cada puesto de trabajo: <p style="margin:0px; font-size: 14px"><strong>COCINA:</strong> Todas las comandas de cocina</p> <p style="margin:0px; font-size: 14px"><strong>SALÓN:</strong> Todas las comandas de cocina y barra sin delivery</p><p style="margin:0px; font-size: 14px"><strong>BARRA:</strong> Todas las comandas de bebidas que requieren prreparación</p></div>""", unsafe_allow_html=True)
         st.markdown("#### ⚡ Panel de Asignación Rápida (Horas Extra)")
         
         c_i1, c_i2, c_i3, c_i4, c_i5, c_i6 = st.columns([1.5, 1.5, 1.5, 1, 1.5, 1.5])
