@@ -127,13 +127,13 @@ def consultarSimplex(ids,fi,ff):
         response.raise_for_status()  # Lanza excepción si hay error HTTP
         datosSimplex = response.json()
 
-        valores = [datosSimplex[0]["venta"]+datosSimplex[1]["venta"]+datosSimplex[2]["venta"]+datosSimplex[3]["venta"]+datosSimplex[4]["venta"],
-                    datosSimplex[5]["venta"]+datosSimplex[6]["venta"]+datosSimplex[7]["venta"]+datosSimplex[8]["venta"]+datosSimplex[9]["venta"],
-                    datosSimplex[10]["venta"]+datosSimplex[11]["venta"]+datosSimplex[12]["venta"]+datosSimplex[13]["venta"]+datosSimplex[14]["venta"],
-                    datosSimplex[15]["venta"]+datosSimplex[16]["venta"]+datosSimplex[17]["venta"]+datosSimplex[18]["venta"]+datosSimplex[19]["venta"],
-                    datosSimplex[20]["venta"]+datosSimplex[21]["venta"]+datosSimplex[22]["venta"]+datosSimplex[23]["venta"]+datosSimplex[24]["venta"],
-                    datosSimplex[25]["venta"]+datosSimplex[26]["venta"]+datosSimplex[27]["venta"]+datosSimplex[28]["venta"]+datosSimplex[29]["venta"],
-                    datosSimplex[30]["venta"]+datosSimplex[31]["venta"]+datosSimplex[32]["venta"]+datosSimplex[33]["venta"]+datosSimplex[34]["venta"]]
+        valores = [datosSimplex[0]["venta"],
+                    datosSimplex[5]["venta"],
+                    datosSimplex[10]["venta"],
+                    datosSimplex[15]["venta"],
+                    datosSimplex[20]["venta"],
+                    datosSimplex[25]["venta"],
+                    datosSimplex[30]["venta"]]
         # Crear DataFrame
         dft = pd.DataFrame({
             'Día': dias_semana,
