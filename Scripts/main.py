@@ -119,8 +119,8 @@ def consultarSimplex(ids,fi,ff):
     }
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    #url = "https://operamx.no-ip.net/back/api_tickets/api/Simplex/ObtenerDatosSimplex"
-    url = 'https://localhost:7165/api/Simplex/ObtenerDatosSimplex'
+    url = "https://operamx.no-ip.net/back/api_tickets/api/Simplex/ObtenerDatosSimplex"
+    #url = 'https://localhost:7165/api/Simplex/ObtenerDatosSimplex'
 
     try:
         response = requests.post(url, data=form_data, verify=False)
