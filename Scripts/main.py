@@ -123,18 +123,23 @@ def consultarSimplex(ids,fi,ff):
     #url = 'https://localhost:7165/api/Simplex/ObtenerDatosSimplex'
 
     try:
-        response = requests.post(url, data=form_data, verify=False)
+        headers = {"X-API-Key": st.secrets["API_KEY"]}
+        response = requests.post(url, data=form_data, verify=False, headers= headers)
         response.raise_for_status()  # Lanza excepción si hay error HTTP
         datosSimplex = response.json()
         
         valores = [] 
+        arr_ventas = []
         filas_dem = []
         index2 = 0 
         index = 0
         for d in dias_semana:
             multiplicador = 1 
-            valores.append(((datosSimplex[index2]["venta"])*multiplicador))
-            index2 = index2 + 5
+            arr_ventas = []
+            for i in range(5):
+              arr_ventas.append(datosSimplex[index2]["venta"])  
+              index2 = index2 + 1
+            valores.append(next((num for num in arr_ventas if num > 0), 0))
             for b in bloques:
                 filas_dem.append({"Día": d, "Bloque": b, "🍳 Cmds Cocina": datosSimplex[index]["alimentos"]*multiplicador, "🍳 Extra Cocina": 0.0, "🍔 Cmds Salón": datosSimplex[index]["salon"]*multiplicador, "🍔 Extra Salón": 0.0, "🍺 Cmds Barra": datosSimplex[index]["bebidas"]*multiplicador, "🍺 Extra Barra": 0.0})
                 index = index + 1
