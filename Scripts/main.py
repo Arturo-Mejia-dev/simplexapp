@@ -119,8 +119,8 @@ def consultarSimplex(ids,fi,ff):
     }
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    url = "https://operamx.no-ip.net/back/api_tickets/api/Simplex/ObtenerDatosSimplex"
-    #url = 'https://localhost:7165/api/Simplex/ObtenerDatosSimplex'
+    #url = "https://operamx.no-ip.net/back/api_tickets/api/Simplex/ObtenerDatosSimplex"
+    url = 'https://localhost:7165/api/Simplex/ObtenerDatosSimplex'
 
     try:
         response = requests.post(url, data=form_data, verify=False)
@@ -246,6 +246,10 @@ if 'resultados_diarios' not in st.session_state: st.session_state['resultados_di
 if 'preview_v' not in st.session_state:
     st.session_state['preview_v'] = None; st.session_state['preview_f'] = None; st.session_state['preview_d'] = None
 if 'plantilla_ideal' not in st.session_state: st.session_state['plantilla_ideal'] = {}
+
+# ✅ CORRECCIÓN: Inicializar sucursal seleccionada en session_state
+if 'sucursal_seleccionada' not in st.session_state:
+    st.session_state.sucursal_seleccionada = None
 
 def sync_tope_slider(): st.session_state.tope = st.session_state.input_slider
 def sync_tope_num(): st.session_state.tope = st.session_state.input_num
@@ -456,55 +460,83 @@ with tab_carga:
         st.error(f"Error al conectar con el servidor: {e}")
         sucursales = []
 
-            # Si hay datos, mostrar el selectbox
+    # ✅ CORRECCIÓN: Selector de sucursal persistente
     if sucursales:
+        # Determinar índice actual basado en session_state
+        current_index = 0
+        if st.session_state.sucursal_seleccionada is not None:
+            # Buscar por código (o por nombre)
+            for i, s in enumerate(sucursales):
+                if s.get('cod') == st.session_state.sucursal_seleccionada.get('cod'):
+                    current_index = i
+                    break
+            else:
+                # Si no se encuentra, resetear
+                st.session_state.sucursal_seleccionada = None
+                current_index = 0
+
         sucursal_seleccionada = st.selectbox(
-                    "SELECCIONA UNA SUCURSAL:",
-                    sucursales,
-                    format_func=lambda s: f"{s['name']}"  # muestra código y nombre
-                    )
+            "SELECCIONA UNA SUCURSAL:",
+            sucursales,
+            index=current_index,
+            format_func=lambda s: f"{s['name']}",
+            key="sucursal_widget"  # Clave para persistencia automática
+        )
+        # Guardar en session_state para uso posterior
+        st.session_state.sucursal_seleccionada = sucursal_seleccionada
     else:
         st.info("No se pudieron cargar las sucursales.")
+        sucursal_seleccionada = None
             
-    # Año actual
+  # Año actual
     today = datetime.date.today()
     year = today.year
 
-    # Calcular la última semana del año (semana que contiene el 31 de diciembre)
+    # Calcular la última semana del año
     last_day = datetime.date(year, 12, 31)
     max_week = week_number(last_day)
-
-    # Crear lista de números de semana
     weeks = list(range(1, max_week + 1))
 
-    # Obtener la semana actual
-    current_week = week_number(today)
+    # ✅ Inicializar semana en session_state si no existe
+    if 'selected_week' not in st.session_state:
+        current_week = week_number(today)
+        # Asegurar que la semana actual esté en la lista (por si el año cambió)
+        st.session_state.selected_week = current_week if current_week in weeks else weeks[0]
 
-    # Buscar el índice de la semana actual en la lista
-    # (Si por algún motivo no está, se puede elegir un valor por defecto, ej. 0)
+    # Asegurar que el valor guardado sea válido
+    if st.session_state.selected_week not in weeks:
+        st.session_state.selected_week = weeks[0]
+
+    # Encontrar el índice para el selectbox
     try:
-        default_index = weeks.index(current_week)
+        default_index = weeks.index(st.session_state.selected_week)
     except ValueError:
-        # En caso de que la semana actual no esté en la lista (p.ej., transición de año)
-        default_index = 0  # Selecciona la primera semana
+        default_index = 0
 
-    # Selectbox en Streamlit con la semana actual preseleccionada
+    # Selectbox con persistencia
     selected_week = st.selectbox(
         "SELECCIONA LA SEMANA",
         weeks,
-        index=default_index
+        index=default_index,
+        key="week_select"
     )
-    fi, ff = get_week_dates(year, selected_week)
+
+    # Actualizar session_state (aunque la key ya lo hace, es explícito)
+    st.session_state.selected_week = selected_week
+
+    # Calcular fechas usando la semana persistida
+    fi, ff = get_week_dates(year, st.session_state.selected_week)
+    st.write(f"Semana **{st.session_state.selected_week}**: desde **{fi}** hasta **{ff}**")
+
+    # Botón CARGAR INFORMACIÓN (sin cambios, ya usa fi y ff actualizados)
     st.button(
-    "CARGAR INFORMACIÓN",
-    on_click=lambda: consultarSimplex(sucursal_seleccionada["cod"], fi, ff),
-    use_container_width=True   # Nota: es use_container_width, no "width"
+        "CARGAR INFORMACIÓN",
+        on_click=lambda: consultarSimplex(st.session_state.sucursal_seleccionada["cod"], fi, ff) if st.session_state.sucursal_seleccionada is not None else st.warning("Selecciona una sucursal primero"),
+        use_container_width=True
     )
 
     if selected_week:
         inicio, fin = get_week_dates(year, selected_week)
-        st.write(f"Semana **{selected_week}**: desde **{inicio}** hasta **{fin}**")
-
 
     st.markdown("---")
     st.markdown("### 2️⃣ PASO 2: Verifica o Captura tu Operación (Manual)")
