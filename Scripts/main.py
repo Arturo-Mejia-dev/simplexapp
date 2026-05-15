@@ -733,7 +733,22 @@ with tab_carga:
         if dias_inviables: st.error(f"⚠️ **Presupuesto Inviable en:** {', '.join(dias_inviables)}. Aumenta el Tope Máximo."); st.session_state['resultados_diarios'] = None
         else:
             st.session_state['resultados_diarios'] = resultados_diarios; st.session_state['venta_total_semana_calc'] = venta_total_semana; st.session_state['costo_total_semana_calc'] = costo_total_semana
-            st.session_state['plantilla_ideal'] = {'Supervisor': ideal_sup_cfg, 'Caja': ideal_caj_cfg, 'Cocinero': math.ceil(turnos_semanales['Cocina'] / 6.0), 'Vendedor': math.ceil(turnos_semanales['Salon'] / 6.0), 'Barra': math.ceil(turnos_semanales['Barra'] / 6.0), 'Empacador': ideal_emp_cfg, 'Auxiliar': ideal_aux_cfg, 'Hostes': ideal_hos_cfg}
+            
+            # --- NUEVA LÓGICA DE PLANTILLA IDEAL (ESCUDO ANTI-DOBLETES) ---
+            max_cocina_diario = max([int(resultados_diarios[d]['M'][0] + resultados_diarios[d]['I'][0] + resultados_diarios[d]['V'][0]) for d in dias_semana])
+            max_vendedor_diario = max([int(resultados_diarios[d]['M'][1] + resultados_diarios[d]['I'][1] + resultados_diarios[d]['V'][1]) for d in dias_semana])
+            max_barra_diario = max([int(resultados_diarios[d]['M'][2] + resultados_diarios[d]['I'][2] + resultados_diarios[d]['V'][2]) for d in dias_semana])
+
+            st.session_state['plantilla_ideal'] = {
+                'Supervisor': ideal_sup_cfg, 
+                'Caja': ideal_caj_cfg, 
+                'Cocinero': int(max(math.ceil(turnos_semanales['Cocina'] / 6.0), max_cocina_diario)), 
+                'Vendedor': int(max(math.ceil(turnos_semanales['Salon'] / 6.0), max_vendedor_diario)), 
+                'Barra': int(max(math.ceil(turnos_semanales['Barra'] / 6.0), max_barra_diario)), 
+                'Empacador': ideal_emp_cfg, 
+                'Auxiliar': ideal_aux_cfg, 
+                'Hostes': ideal_hos_cfg
+            }
             st.success("✅ ¡Cálculo Exitoso!")
 
 # ==========================================
