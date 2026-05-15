@@ -458,7 +458,8 @@ with tab_carga:
 
     # Intentar obtener datos
     try:
-        response = requests.get(url, timeout=10)
+        headers = {"X-API-Key": st.secrets["API_KEY"]}
+        response = requests.get(url, timeout=10,headers=headers)
         response.raise_for_status()
         sucursales = response.json()
     except Exception as e:
