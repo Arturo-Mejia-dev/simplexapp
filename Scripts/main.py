@@ -177,26 +177,80 @@ def week_number(date):
     return delta.days // 7 + 1
 
 def load_config():
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, 'r') as f:
-                data = json.load(f)
-                if 'esp_pct' not in data: data['esp_pct'] = {d: 0.0 for d in dias_semana}
-                if 'ideal_sup' not in data: data['ideal_sup'] = 2
-                if 'ideal_caj' not in data: data['ideal_caj'] = 3
-                if 'ideal_hos' not in data: data['ideal_hos'] = 3
-                if 'ideal_emp' not in data: data['ideal_emp'] = 2
-                if 'ideal_aux' not in data: data['ideal_aux'] = 2
-                if 's_emp' not in data: data['s_emp'] = 250.0
-                if 's_aux' not in data: data['s_aux'] = 250.0
-                return data
-        except:
+    try:
+        headers = {"X-API-Key": st.secrets["API_KEY"]}
+        #url_config = 'https://localhost:7165/api/Simplex/getConfigMaestra'
+        url_config = 'https://operamx.no-ip.net/back/api_tickets/api/Simplex/getConfigMaestra'
+        response = requests.get(url_config, params={},verify=False, headers= headers)
+        response.raise_for_status()
+
+        data = response.text
+
+        if not data.strip():
+            print("La respuesta es una cadena vacía.")
             return DEFAULT_CONFIG
-    return DEFAULT_CONFIG
+
+        # Intentar parsear como JSON
+        try:
+            json_data = json.loads(data)
+            print("JSON parseado exitosamente.")
+            data = json_data
+            if 'esp_pct' not in data: data['esp_pct'] = {d: 0.0 for d in dias_semana}
+            if 'ideal_sup' not in data: data['ideal_sup'] = 2
+            if 'ideal_caj' not in data: data['ideal_caj'] = 3
+            if 'ideal_hos' not in data: data['ideal_hos'] = 3
+            if 'ideal_emp' not in data: data['ideal_emp'] = 2
+            if 'ideal_aux' not in data: data['ideal_aux'] = 2
+            if 's_emp' not in data: data['s_emp'] = 250.0
+            if 's_aux' not in data: data['s_aux'] = 250.0
+            return data
+                
+        except json.JSONDecodeError:
+            print("La respuesta no es un JSON válido. Contenido:", data)
+            return DEFAULT_CONFIG  # O podrías devolver None o lanzar excepción
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error en la solicitud HTTP: {e}")
+        # Si hay una respuesta, intentar extraer mensaje de error (puede ser JSON)
+        if e.response is not None:
+            try:
+                error_json = e.response.json()
+                print("Detalle del error del servidor:", error_json)
+            except:
+                print("Respuesta de error (texto):", e.response.text)
+        return DEFAULT_CONFIG
+    # if os.path.exists(CONFIG_FILE):
+    #     try:
+    #         with open(CONFIG_FILE, 'r') as f:
+    #             data = json.load(f)
+    #             if 'esp_pct' not in data: data['esp_pct'] = {d: 0.0 for d in dias_semana}
+    #             if 'ideal_sup' not in data: data['ideal_sup'] = 2
+    #             if 'ideal_caj' not in data: data['ideal_caj'] = 3
+    #             if 'ideal_hos' not in data: data['ideal_hos'] = 3
+    #             if 'ideal_emp' not in data: data['ideal_emp'] = 2
+    #             if 'ideal_aux' not in data: data['ideal_aux'] = 2
+    #             if 's_emp' not in data: data['s_emp'] = 250.0
+    #             if 's_aux' not in data: data['s_aux'] = 250.0
+    #             return data
+    #     except:
+    #         return DEFAULT_CONFIG
+    # return DEFAULT_CONFIG
 
 def save_config(config):
-    with open(CONFIG_FILE, 'w') as f:
-        json.dump(config, f)
+    headers = {"X-API-Key": st.secrets["API_KEY"]}
+    #url_guardar = "https://localhost:7165/api/Simplex/guardarConfigMaestra"
+    url_guardar = "https://operamx.no-ip.net/back/api_tickets/api/Simplex/guardarConfigMaestra"
+    json_string = json.dumps(config)
+    payload = {'data': json_string}
+    try:
+        response = requests.post(url_guardar, data=payload,verify=False, headers= headers)
+        response.raise_for_status()
+        print("Configuración guardada en BD correctamente.")
+    except requests.exceptions.RequestException as e:
+        print(f"Error al conectar con la API: {e}")
+        raise
+    # with open(CONFIG_FILE, 'w') as f:
+    #     json.dump(config, f)
 
 config_data = load_config()
 
