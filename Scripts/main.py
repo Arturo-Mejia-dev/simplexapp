@@ -907,6 +907,97 @@ with tab_semanal:
             else: return [''] * len(row) 
         
         st.dataframe(df_maestra.style.set_properties(**{'text-align': 'center'}).apply(color_filas, axis=1), height=830, use_container_width=False, hide_index=True, column_config={"Día": st.column_config.TextColumn("Día", width=250)})
+       
+       # --- AUDITORÍA QUIRÚRGICA DE CELDAS (INSPECTOR TURNO POR TURNO) ---
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("### 🔍 Auditoría Celda por Celda: ¿Por qué Simplex dio este número?")
+        st.write("Elige las coordenadas exactas de cualquier celda de tu *Tabla Maestra Semanal* para auditar su justificación matemática:")
+        
+        c_sel1, c_sel2, c_sel3 = st.columns(3)
+        with c_sel1:
+            dia_aud = st.selectbox("📅 1. Día de la Semana:", dias_semana, key="aud_dia_sem")
+        with c_sel2:
+            turno_aud = st.selectbox("🕒 2. Turno a auditar:", ["☀️ Matutino (10-18)", "🌤️ Intermedio (14-22)", "🌙 Vespertino (17-01)"], key="aud_turno_sem")
+        with c_sel3:
+            puesto_aud = st.selectbox("🎯 3. Puesto a auditar:", ["🍳 Cocinero", "🍔 Vendedor", "🍺 Barra", "🖥️ Caja", "⭐️ Supervisor", "🛎️ Hostes", "📦 Empacador", "🧹 Auxiliar"], key="aud_puesto_sem")
+            
+        # Mapeo de índices y variables
+        res_dia = st.session_state['resultados_diarios'][dia_aud]
+        map_idx = {"🍳 Cocinero": 0, "🍔 Vendedor": 1, "🍺 Barra": 2, "🖥️ Caja": 3, "⭐️ Supervisor": 4, "🛎️ Hostes": 5, "📦 Empacador": 6, "🧹 Auxiliar": 7}
+        t_key = 'M' if 'Matutino' in turno_aud else ('I' if 'Intermedio' in turno_aud else 'V')
+        idx_rol = map_idx[puesto_aud]
+        gente_celda = int(res_dia[t_key][idx_rol])
+        
+        if idx_rol in [0, 1, 2]:  # Puestos Operativos
+            rol_nombre = ["Cocina", "Salon", "Barra"][idx_rol]
+            cap_val = [c_coc, c_sal, c_bar][idx_rol]
+            blk_indices = [0, 1, 2] if t_key == 'M' else ([1, 2, 3] if t_key == 'I' else [2, 3, 4])
+            cmds_turno = sum(res_dia['demanda_bruta'][rol_nombre][i] for i in blk_indices)
+            extras_db = {'Cocina': st.session_state.db['demanda'][dia_aud]['ec'], 'Salon': st.session_state.db['demanda'][dia_aud]['es'], 'Barra': st.session_state.db['demanda'][dia_aud]['eb']}
+            extras_turno = sum(extras_db[rol_nombre][i] for i in blk_indices)
+            hrs_pura = round(cmds_turno / cap_val, 1) if cap_val > 0 else 0
+            hrs_totales = round(hrs_pura + extras_turno, 1)
+            
+            html_celda = f"""<div style="background-color: #FFFFFF; border: 2px solid #1F77B4; border-radius: 15px; padding: 25px; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #EEE; padding-bottom: 15px; margin-bottom: 20px;">
+<div>
+<span style="font-size: 13px; color: #666; font-weight: bold; text-transform: uppercase;">DESGLOSE OPERATIVO DE CELDA</span>
+<h4 style="margin: 4px 0 0 0; color: #1F77B4; font-size: 22px;">{puesto_aud} | {dia_aud} - {turno_aud}</h4>
+</div>
+<div style="background-color: #1F77B4; color: white; padding: 12px 25px; border-radius: 12px; text-align: center;">
+<span style="font-size: 11px; display: block; text-transform: uppercase; letter-spacing: 1px;">Simplex Asignó</span>
+<strong style="font-size: 24px;">{gente_celda} Persona(s)</strong>
+</div>
+</div>
+<div style="display: flex; gap: 15px; margin-bottom: 20px;">
+<div style="flex: 1; background-color: #F8F9FA; padding: 15px; border-radius: 10px; border: 1px solid #E9ECEF; text-align: center;">
+<span style="font-size: 12px; color: #666; font-weight: bold;">VOLUMEN ESPERADO</span>
+<div style="font-size: 18px; font-weight: bold; color: #222; margin-top: 5px;">🔥 {cmds_turno:,.0f} Comandas</div>
+</div>
+<div style="flex: 1; background-color: #F8F9FA; padding: 15px; border-radius: 10px; border: 1px solid #E9ECEF; text-align: center;">
+<span style="font-size: 12px; color: #666; font-weight: bold;">VELOCIDAD CONFIGURADA</span>
+<div style="font-size: 18px; font-weight: bold; color: #1F77B4; margin-top: 5px;">⚡ {cap_val} cmds / hora</div>
+</div>
+<div style="flex: 1; background-color: #F8F9FA; padding: 15px; border-radius: 10px; border: 1px solid #E9ECEF; text-align: center;">
+<span style="font-size: 12px; color: #666; font-weight: bold;">EXTRAS / PREPARACIÓN</span>
+<div style="font-size: 18px; font-weight: bold; color: #D62728; margin-top: 5px;">⏱️ +{extras_turno} Horas</div>
+</div>
+</div>
+<div style="background-color: #E8F4F8; padding: 18px; border-radius: 10px; border-left: 5px solid #1F77B4;">
+<p style="margin: 0; font-size: 15px; color: #222; line-height: 1.6;">
+💡 <b>Explicación Matemática de esta Celda:</b><br>
+Para procesar las <b>{cmds_turno:,.0f} comandas</b> que caen durante las horas del turno <b>{turno_aud}</b> del <b>{dia_aud}</b>, a un ritmo estándar de <b>{cap_val} comandas por hora</b>, el restaurante consume <b>{hrs_pura} horas de trabajo puro</b>.<br>
+Al sumarle las <b>{extras_turno} horas extra</b> que inyectaste para labores de preparación, limpieza o cierre, la necesidad operativa real se convierte en <b>{hrs_totales} horas-hombre</b>.<br>
+👉 Como cada colaborador trabaja un bloque de 8 horas, Simplex calculó que necesitas exactamente a <b>{gente_celda} empleado(s) físico(s)</b> en este turno para sacar la producción sin retrasos ni sobrecargar al personal.
+</p>
+</div>
+</div>"""
+            st.markdown(html_celda, unsafe_allow_html=True)
+            
+        else:  # Puestos Estructurales Fijos
+            estado_txt = "ACTIVADO (Sí)" if gente_celda > 0 else "DESACTIVADO (No)"
+            color_est = "#2CA02C" if gente_celda > 0 else "#666666"
+            html_fijo = f"""<div style="background-color: #FFF9C4; border: 2px solid #FBC02D; border-radius: 15px; padding: 25px; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #FCE588; padding-bottom: 15px; margin-bottom: 20px;">
+<div>
+<span style="font-size: 13px; color: #8C6B00; font-weight: bold; text-transform: uppercase;">DIAGNÓSTICO DE PUESTO ESTRUCTURAL</span>
+<h4 style="margin: 4px 0 0 0; color: #B38600; font-size: 22px;">{puesto_aud} | {dia_aud} - {turno_aud}</h4>
+</div>
+<div style="background-color: {color_est}; color: white; padding: 12px 25px; border-radius: 12px; text-align: center;">
+<span style="font-size: 11px; display: block; text-transform: uppercase; letter-spacing: 1px;">Asignación</span>
+<strong style="font-size: 24px;">{gente_celda} Persona(s)</strong>
+</div>
+</div>
+<p style="margin: 0; font-size: 15px; color: #222; line-height: 1.6;">
+📌 <b>Explicación de esta Celda:</b><br>
+El puesto de <b>{puesto_aud}</b> es una posición <b>Estructural Fija</b>. Su cantidad no se calcula dividiendo comandas ni ventas, sino que depende de la estructura organizativa de tu restaurante.<br>
+El algoritmo auditó tu matriz de <b>"Personal Fijo (Turnos)"</b> para el día <b>{dia_aud}</b> en el turno <b>{turno_aud}</b> y confirmó que la asistencia estaba programada como: <b style="color: {color_est};">{estado_txt}</b>.<br>
+{'👉 El sistema asignó a 1 colaborador en esta celda para respetar tu estándar operativo y sumó su salario dentro del presupuesto.' if gente_celda > 0 else '👉 Al estar configurado como No (o por ser día de descanso del Supervisor), el sistema dejó la celda en 0 para no generar gastos innecesarios de nómina.'}
+</p>
+</div>"""
+            st.markdown(html_fijo, unsafe_allow_html=True)
+        st.markdown("---")
+       
         # --- DICTAMEN EJECUTIVO DINÁMICO PARA DIRECCIÓN ---
         st.markdown("<br><br>", unsafe_allow_html=True)
         st.markdown("### 🎯 Dictamen Ejecutivo: ¿De dónde salen los números?")
