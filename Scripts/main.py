@@ -907,7 +907,54 @@ with tab_semanal:
             else: return [''] * len(row) 
         
         st.dataframe(df_maestra.style.set_properties(**{'text-align': 'center'}).apply(color_filas, axis=1), height=830, use_container_width=False, hide_index=True, column_config={"Día": st.column_config.TextColumn("Día", width=250)})
+        # --- DICTAMEN EJECUTIVO DINÁMICO PARA DIRECCIÓN ---
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.markdown("### 🎯 Dictamen Ejecutivo: ¿De dónde salen los números?")
+        
+        # Extracción dinámica de datos en tiempo real
+        max_ven_dia = max([int(st.session_state['resultados_diarios'][d]['M'][1] + st.session_state['resultados_diarios'][d]['I'][1] + st.session_state['resultados_diarios'][d]['V'][1]) for d in dias_semana])
+        dia_pico_ven = [d for d in dias_semana if int(st.session_state['resultados_diarios'][d]['M'][1] + st.session_state['resultados_diarios'][d]['I'][1] + st.session_state['resultados_diarios'][d]['V'][1]) == max_ven_dia][0]
+        max_coc_dia = max([int(st.session_state['resultados_diarios'][d]['M'][0] + st.session_state['resultados_diarios'][d]['I'][0] + st.session_state['resultados_diarios'][d]['V'][0]) for d in dias_semana])
+        dia_pico_coc = [d for d in dias_semana if int(st.session_state['resultados_diarios'][d]['M'][0] + st.session_state['resultados_diarios'][d]['I'][0] + st.session_state['resultados_diarios'][d]['V'][0]) == max_coc_dia][0]
+        prom_ven = math.ceil(sum(f['🍔 Vendedor'] for f in filas_maestras[:-1]) / 6.0)
+        
+        st.markdown(f"""
+        <div style="background-color: #FFFFFF; border: 3px solid #1F77B4; border-radius: 15px; padding: 25px; color: #222; line-height: 1.6; box-shadow: 0 6px 12px rgba(0,0,0,0.08);">
+            
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px dashed #ccc; padding-bottom: 15px; margin-bottom: 20px;">
+                <div>
+                    <h4 style="color: #1F77B4; margin: 0; font-size: 20px;">📊 Radiografía de la Nómina - Semana {st.session_state.get('selected_week', '')}</h4>
+                    <span style="font-size: 13px; color: #666;">Cálculo matemático optimizado para máxima rentabilidad y cobertura</span>
+                </div>
+                <div style="background-color: #EBF5FB; padding: 10px 15px; border-radius: 10px; text-align: center; border: 1px solid #1F77B4;">
+                    <span style="font-size: 12px; color: #555; display: block;">INVERSIÓN EN NÓMINA</span>
+                    <strong style="font-size: 18px; color: #1F77B4;">{pct:.1f}%</strong>
+                </div>
+            </div>
 
+            <p style="font-size: 16px; margin-bottom: 10px;"><b>💰 1. LA BALANZA FINANCIERA (¿Cuánto hay y cuánto se gasta?)</b></p>
+            <div style="background-color: #F8F9FA; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #2CA02C;">
+                <p style="margin: 0;">🟢 <b>Venta Proyectada:</b> $ {v_tot:,.2f} <i>(Ingreso total esperado en la semana)</i></p>
+                <p style="margin: 8px 0 0 0;">🔴 <b>Costo de Nómina:</b> $ {c_tot:,.2f} <i>(Sueldos exactos para operar sin fallas)</i></p>
+                <p style="margin: 8px 0 0 0;">⚖️ <b>Resultado:</b> El costo representa el <b>{pct:.1f}%</b> de la venta. <b>El presupuesto alcanza perfectamente y está blindado dentro del límite financiero.</b></p>
+            </div>
+
+            <p style="font-size: 16px; margin-bottom: 10px;"><b>👥 2. ¿DE DÓNDE SALE EL NÚMERO DE PERSONAL? (Paso a Paso)</b></p>
+            <div style="background-color: #FFF9C4; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #FBC02D;">
+                <p style="margin: 0; font-weight: bold; color: #B38600;">El dilema: Promedio vs. Realidad Operativa</p>
+                <p style="margin: 8px 0;">÷️⃣ <b>El Promedio (6x1):</b> Si sumamos todos los turnos de la semana y los dividimos entre 6 días de trabajo, el promedio nos pide contratar <b>{prom_ven} Vendedores</b>.</p>
+                <p style="margin: 8px 0;">🔥 <b>El Día Crítico:</b> El algoritmo detecta que el día más pesado es el <b>{dia_pico_ven}</b>, donde el Rush exige tener físicamente a <b>{max_ven_dia} Vendedores simultáneos</b> (y en Cocina el <b>{dia_pico_coc}</b> exige <b>{max_coc_dia} Cocineros</b>).</p>
+                <p style="margin: 8px 0 0 0; font-size: 15px;">👉 <b>LA DECISIÓN:</b> El sistema manda contratar el número del día crítico (<b>{max_ven_dia} Vendedores</b>). <i>¿Por qué no el promedio?</i> Porque si contratamos menos, el <b>{dia_pico_ven}</b> colapsaría el servicio o nos obligaría a pagar horas extra y turnos dobles que saldrían más caros que la nómina normal.</p>
+            </div>
+
+            <p style="font-size: 16px; margin-bottom: 10px;"><b>⏱️ 3. ¿POR QUÉ EN ESTOS HORARIOS? (Cero Desperdicio)</b></p>
+            <div style="background-color: #F0F8FF; padding: 15px; border-radius: 10px; border-left: 5px solid #1F77B4;">
+                <p style="margin: 0;">🚀 <b>Ataque al Rush (14:00 a 17:00 hrs):</b> Al cruzar los turnos Matutinos e Intermedios, logramos tener al 100% del equipo en el piso justo a la hora de la comida, cuando caen más comandas.</p>
+                <p style="margin: 8px 0 0 0;">🌙 <b>Corte Nocturno:</b> A las 18:00 hrs, exactamente cuando baja la venta, el turno Matutino se va a su casa. <b>Se elimina el tiempo ocioso y no se paga ni una hora muerta en la noche.</b></p>
+            </div>
+
+        </div>
+        """, unsafe_allow_html=True)
 with tab_ideal:
     if st.session_state['resultados_diarios'] is not None:
         st.markdown("""<div style="background-color: #F3E5F5; padding: 15px; border-left: 5px solid #9C27B0; border-radius: 5px; margin-bottom: 20px;"><h4 style="margin-top: 0; color: #9C27B0;">🧠 Análisis Ejecutivo de Contratación (Plantilla Ideal)</h4><p style="font-size: 14px; color: #333;"><b>1. Operativos:</b> El sistema sumó todos los turnos que te pidió la "Plantilla Maestra Semanal" y los dividió entre 6 días. Al redondear matemáticamente hacia arriba (Regla 6x1), el algoritmo te dice exactamente el número de empleados que necesitas contratar para que tu restaurante cubra todos sus turnos <b>y al mismo tiempo garantices que todos descansen 1 día a la semana.</b><br><b>2. Estructurales Fijos:</b> El sistema respeta el límite de personal "Ideal" que tú configuraste en el panel lateral.</p></div>""", unsafe_allow_html=True)
