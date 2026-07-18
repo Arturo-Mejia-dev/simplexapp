@@ -938,6 +938,25 @@ with tab_semanal:
             hrs_pura = round(cmds_turno / cap_val, 1) if cap_val > 0 else 0
             hrs_totales = round(hrs_pura + extras_turno, 1)
             
+# --- Lógica de explicación "Nivel Primaria" sobre el empalme de turnos ---
+            if hrs_totales > (gente_celda * 8):
+                explicacion_empalme = f"""
+<div style="background-color: #FFF3E0; border: 2px solid #FF9800; border-radius: 10px; padding: 15px; margin-top: 15px;">
+<p style="margin: 0 0 10px 0; font-size: 16px; color: #D65A31; font-weight: bold;">🧩 Explicación Fácil (Nivel Primaria): ¿Por qué pide {gente_celda} persona(s) si hay {hrs_totales} horas de trabajo?</p>
+<p style="margin: 0 0 8px 0; font-size: 14px; color: #333;"><b>¡Porque los turnos no trabajan solos, se empalman para ayudarse!</b></p>
+<ul style="margin: 0 0 12px 20px; padding: 0; font-size: 14px; color: #333; line-height: 1.6;">
+<li><b>1. Las horas tranquilas:</b> Al abrir el restaurante (10:00 am a 2:00 pm), hay pocos clientes. <b>{gente_celda} persona(s)</b> en este turno son más que suficientes para abrir y atender sin problema.</li>
+<li><b>2. ¡Llegan los refuerzos!</b> A las 2:00 pm, cuando empieza la hora pesada de la comida ("El Rush"), <b>entran a trabajar los compañeros del turno Intermedio</b>. Y a las 5:00 pm entran los del Vespertino.</li>
+<li><b>3. El trabajo se reparte:</b> Las horas pesadas que faltaban por hacer ({round(hrs_totales - (gente_celda * 8), 1)} hrs sobrantes) <b>no las hace la persona de la mañana sola</b>, sino que se las reparten los refuerzos que acaban de llegar a ayudar a la cocina o al salón.</li>
+</ul>
+<p style="margin: 0; font-size: 14px; color: #222; background-color: #FFE0B2; padding: 10px; border-radius: 6px;">👉 <b>En resumen:</b> Simplex es tan inteligente que no te hace contratar a otra persona en la mañana para que esté parada sin hacer nada. Deja al personal justo para abrir y <b>las horas pesadas se absorben entre todos cuando los turnos se juntan en la tarde</b>. ¡Cero desperdicio de dinero!</p>
+</div>"""
+            else:
+                explicacion_empalme = f"""
+<p style="margin: 10px 0 0 0; font-size: 14px; color: #222;">
+👉 Como cada colaborador trabaja un bloque de 8 horas y la carga total de este turno es de <b>{hrs_totales} horas</b>, Simplex calculó que necesitas exactamente a <b>{gente_celda} empleado(s) físico(s)</b> en este horario para sacar la producción sin retrasos ni sobrecargar al personal.
+</p>"""
+
             html_celda = f"""<div style="background-color: #FFFFFF; border: 2px solid #1F77B4; border-radius: 15px; padding: 25px; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #EEE; padding-bottom: 15px; margin-bottom: 20px;">
 <div>
@@ -966,10 +985,9 @@ with tab_semanal:
 <div style="background-color: #E8F4F8; padding: 18px; border-radius: 10px; border-left: 5px solid #1F77B4;">
 <p style="margin: 0; font-size: 15px; color: #222; line-height: 1.6;">
 💡 <b>Explicación Matemática de esta Celda:</b><br>
-Para procesar las <b>{cmds_turno:,.0f} comandas</b> que caen durante las horas del turno <b>{turno_aud}</b> del <b>{dia_aud}</b>, a un ritmo estándar de <b>{cap_val} comandas por hora</b>, el restaurante consume <b>{hrs_pura} horas de trabajo puro</b>.<br>
-Al sumarle las <b>{extras_turno} horas extra</b> que inyectaste para labores de preparación, limpieza o cierre, la necesidad operativa real se convierte en <b>{hrs_totales} horas-hombre</b>.<br>
-👉 Como cada colaborador trabaja un bloque de 8 horas, Simplex calculó que necesitas exactamente a <b>{gente_celda} empleado(s) físico(s)</b> en este turno para sacar la producción sin retrasos ni sobrecargar al personal.
+Para procesar las <b>{cmds_turno:,.0f} comandas</b> del turno <b>{turno_aud}</b> a un ritmo de <b>{cap_val} cmds/hora</b> (más {extras_turno} hrs extra), el restaurante consume un total de <b>{hrs_totales} horas-hombre</b>.
 </p>
+{explicacion_empalme}
 </div>
 </div>"""
             st.markdown(html_celda, unsafe_allow_html=True)
