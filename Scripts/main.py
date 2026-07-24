@@ -52,40 +52,20 @@ div.stSpinner { text-align: center; margin-top: 50px; font-size: 20px; font-weig
 
 /* --- 🔘 BOTONES SIMÉTRICOS Y ESTILIZADOS --- */
 .stButton button[kind="primary"], .stButton button[kind="secondary"] {
-    padding: 8px 15px !important;
-    font-size: 14px !important;
-    font-weight: bold !important;
-    border-radius: 8px !important;
-    height: 45px !important;
+    padding: 8px 15px !important; font-size: 14px !important; font-weight: bold !important; border-radius: 8px !important; height: 45px !important;
 }
 
-/* Primario: Negro y Pulso Rojo (Calcular e Inyectar) */
-.stButton button[kind="primary"] { 
-    background-color: #111111 !important; 
-    color: #FFFFFF !important; 
-    border: 2px solid #FF0000 !important; 
-    animation: pulse_red_small 2s infinite !important; 
-}
+.stButton button[kind="primary"] { background-color: #111111 !important; color: #FFFFFF !important; border: 2px solid #FF0000 !important; animation: pulse_red_small 2s infinite !important; }
 .stButton button[kind="primary"]:hover { background-color: #222222 !important; border-color: #FF3333 !important; }
 
-/* Botón Calcular Gigante (Reescribe el tamaño solo para el botón final) */
-div:has(> .stButton button:contains("CALCULAR")) .stButton button {
-    height: 60px !important;
-    font-size: 18px !important;
-}
+div:has(> .stButton button:contains("CALCULAR")) .stButton button { height: 60px !important; font-size: 18px !important; }
 
-/* Secundario: Claro y Pulso Azul (Limpiar, Todo Matutino, etc.) */
-.stButton button[kind="secondary"] { 
-    border: 1px solid #ccc !important; 
-    animation: pulse_blue_small 2s infinite !important; 
-}
+.stButton button[kind="secondary"] { border: 1px solid #ccc !important; animation: pulse_blue_small 2s infinite !important; }
 .stButton button[kind="secondary"]:hover { background-color: #1F77B4 !important; color: #FFFFFF !important; border-color: #1F77B4 !important;}
 
 .stDownloadButton button { background-color: #1F77B4 !important; color: #FFFFFF !important; border: 2px solid #155987 !important; padding: 8px 15px !important; font-weight: bold !important; border-radius: 8px !important;}
-
 [data-testid="stFileUploader"] { background-color: #EBF5FB !important; border: 2px dashed #2E86C1 !important; border-radius: 10px !important; }
 
-/* Efecto Latido Intenso para Gráficas */
 @keyframes latido_grafico { 
     0% { transform: scale(1); box-shadow: 0 0 5px rgba(31, 119, 180, 0.3); border-color: #EBF5FB; } 
     50% { transform: scale(1.01); box-shadow: 0 0 15px rgba(31, 119, 180, 0.5); border-color: #1F77B4; } 
@@ -93,196 +73,106 @@ div:has(> .stButton button:contains("CALCULAR")) .stButton button {
 }
 [data-testid="stPlotlyChart"] { border-radius: 12px !important; padding: 15px !important; background-color: #FFFFFF !important; border: 2px solid #EBF5FB !important; animation: latido_grafico 3s infinite ease-in-out !important; margin: 20px 5px !important; transition: all 0.3s ease !important; }
 [data-testid="stPlotlyChart"]:hover { animation: none !important; transform: scale(1.02) !important; box-shadow: 0 0 15px rgba(31, 119, 180, 0.4) !important; border-color: #1F77B4 !important; }
-
 @media print { section[data-testid="stSidebar"], header[data-testid="stHeader"], .stButton, .stDownloadButton { display: none !important; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }
 </style>
 """, unsafe_allow_html=True)
 
 # --- 💾 CONFIGURACIÓN INICIAL ---
-CONFIG_FILE = "config_simplex.json"
 dias_semana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
 bloques = ["10:00 a 14:00 (4 hrs)", "14:00 a 17:00 (3 hrs)", "17:00 a 18:00 (1 hr)", "18:00 a 22:00 (4 hrs)", "22:00 a 01:00 (3 hrs)"]
 horas_por_bloque = [4, 3, 1, 4, 3]
 puestos_fijos = ['Supervisor', 'Caja', 'Hostes', 'Empacador', 'Auxiliar']
 
 DEFAULT_CONFIG = {
-    's_coc': 350.0, 's_ven': 300.0, 's_bar': 320.0, 's_sup': 500.0, 's_caj': 300.0, 's_hos': 250.0,
-    's_emp': 250.0, 's_aux': 250.0, 'c_coc': 8, 'c_sal': 12, 'c_bar': 15,
-    'esp_pct': {d: 0.0 for d in dias_semana}, 'ideal_sup': 2, 'ideal_caj': 3, 'ideal_hos': 3, 'ideal_emp': 2, 'ideal_aux': 2 
+    's_coc': 350.0, 's_ven': 300.0, 's_bar': 320.0, 's_sup': 500.0, 's_caj': 300.0, 's_hos': 250.0, 's_emp': 250.0, 's_aux': 250.0, 
+    'c_coc': 8, 'c_sal': 12, 'c_bar': 15,
+    'fatiga_pct': 15.0,  
+    'esp_pct': {d: {'M': 0.0, 'I': 0.0, 'V': 0.0} for d in dias_semana}, 
+    'ideal_sup': 2, 'ideal_caj': 3, 'ideal_hos': 3, 'ideal_emp': 2, 'ideal_aux': 2 
 }
 
 def consultarSimplex(ids,fi,ff):
-    form_data = {
-    'ids': str(ids),                     # El valor debe ser string o número; requests lo codificará
-    'fi': fi.strftime('%Y-%m-%d'),       # Ej: '2025-03-01'
-    'ff': ff.strftime('%Y-%m-%d')        # Ej: '2025-03-10'
-    }
+    form_data = {'ids': str(ids), 'fi': fi.strftime('%Y-%m-%d'), 'ff': ff.strftime('%Y-%m-%d')}
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
     url = "https://operamx.no-ip.net/back/api_tickets/api/Simplex/ObtenerDatosSimplex"
-    #url = 'https://localhost:7165/api/Simplex/ObtenerDatosSimplex'
-
     try:
         headers = {"X-API-Key": st.secrets["API_KEY"]}
         response = requests.post(url, data=form_data, verify=False, headers= headers)
-        response.raise_for_status()  # Lanza excepción si hay error HTTP
+        response.raise_for_status() 
         datosSimplex = response.json()
-        
-        valores = [] 
-        arr_ventas = []
-        filas_dem = []
-        index2 = 0 
-        index = 0
+        valores = []; arr_ventas = []; filas_dem = []; index2 = 0; index = 0
         for d in dias_semana:
-            multiplicador = 1 
-            arr_ventas = []
+            multiplicador = 1; arr_ventas = []
             for i in range(5):
-              arr_ventas.append(datosSimplex[index2]["venta"])  
-              index2 = index2 + 1
+              arr_ventas.append(datosSimplex[index2]["venta"]); index2 += 1
             valores.append(next((num for num in arr_ventas if num > 0), 0))
             for b in bloques:
                 filas_dem.append({"Día": d, "Bloque": b, "🍳 Cmds Cocina": datosSimplex[index]["alimentos"]*multiplicador, "🍳 Extra Cocina": 0.0, "🍔 Cmds Salón": datosSimplex[index]["salon"]*multiplicador, "🍔 Extra Salón": 0.0, "🍺 Cmds Barra": datosSimplex[index]["bebidas"]*multiplicador, "🍺 Extra Barra": 0.0})
-                index = index + 1
+                index += 1
         st.session_state.df_demanda = pd.DataFrame(filas_dem)
-         # Crear DataFrame
-        dft = pd.DataFrame({
-            'Día': dias_semana,
-            'Venta Proyectada ($)': valores
-        })
+        dft = pd.DataFrame({'Día': dias_semana, 'Venta Proyectada ($)': valores})
         dft['Día'] = dft['Día'].str.strip()
         st.session_state.df_ventas = dft
     except requests.exceptions.RequestException as e:
         print('Error en la petición:', e)
     
 def get_week_dates(year, week_num):
-    """Devuelve (domingo, sábado) de la semana `week_num` del año `year`."""
-    start_week1 = get_week_start_base(year)
-    start = start_week1 + datetime.timedelta(weeks=week_num - 1)
-    end = start + datetime.timedelta(days=6)
-    return start, end
-
-# Función para obtener el domingo de inicio de la semana 1 del año
-def get_week_start_base(year):
-    # 1 de enero del año
     jan1 = datetime.date(year, 1, 1)
-    # Días a restar para llegar al domingo anterior o igual al 1 de enero
-    # weekday(): lunes=0, domingo=6
     days_to_subtract = (jan1.weekday() + 1) % 7
-    return jan1 - datetime.timedelta(days=days_to_subtract)
+    start_week1 = jan1 - datetime.timedelta(days=days_to_subtract)
+    start = start_week1 + datetime.timedelta(weeks=week_num - 1)
+    return start, start + datetime.timedelta(days=6)
 
-# Función que devuelve el número de semana de una fecha dada
 def week_number(date):
-    start = get_week_start_base(date.year)
-    delta = date - start
-    return delta.days // 7 + 1
+    jan1 = datetime.date(date.year, 1, 1)
+    start = jan1 - datetime.timedelta(days=(jan1.weekday() + 1) % 7)
+    return (date - start).days // 7 + 1
 
 def load_config():
     try:
         headers = {"X-API-Key": st.secrets["API_KEY"]}
-        #url_config = 'https://localhost:7165/api/Simplex/getConfigMaestra'
         url_config = 'https://operamx.no-ip.net/back/api_tickets/api/Simplex/getConfigMaestra'
         response = requests.get(url_config, params={},verify=False, headers= headers)
         response.raise_for_status()
-
         data = response.text
-
-        if not data.strip():
-            print("La respuesta es una cadena vacía.")
-            return DEFAULT_CONFIG
-
-        # Intentar parsear como JSON
+        if not data.strip(): return DEFAULT_CONFIG
         try:
             json_data = json.loads(data)
-            print("JSON parseado exitosamente.")
-            data = json_data
-            if 'esp_pct' not in data: data['esp_pct'] = {d: 0.0 for d in dias_semana}
-            if 'ideal_sup' not in data: data['ideal_sup'] = 2
-            if 'ideal_caj' not in data: data['ideal_caj'] = 3
-            if 'ideal_hos' not in data: data['ideal_hos'] = 3
-            if 'ideal_emp' not in data: data['ideal_emp'] = 2
-            if 'ideal_aux' not in data: data['ideal_aux'] = 2
-            if 's_emp' not in data: data['s_emp'] = 250.0
-            if 's_aux' not in data: data['s_aux'] = 250.0
-            return data
-                
+            if 'esp_pct' not in json_data or not isinstance(json_data['esp_pct'], dict) or (len(json_data['esp_pct']) > 0 and not isinstance(list(json_data['esp_pct'].values())[0], dict)):
+                json_data['esp_pct'] = {d: {'M': 0.0, 'I': 0.0, 'V': 0.0} for d in dias_semana}
+            
+            for k, v in DEFAULT_CONFIG.items():
+                if k not in json_data: json_data[k] = v
+            return json_data
         except json.JSONDecodeError:
-            print("La respuesta no es un JSON válido. Contenido:", data)
-            return DEFAULT_CONFIG  # O podrías devolver None o lanzar excepción
-
-    except requests.exceptions.RequestException as e:
-        print(f"Error en la solicitud HTTP: {e}")
-        # Si hay una respuesta, intentar extraer mensaje de error (puede ser JSON)
-        if e.response is not None:
-            try:
-                error_json = e.response.json()
-                print("Detalle del error del servidor:", error_json)
-            except:
-                print("Respuesta de error (texto):", e.response.text)
+            return DEFAULT_CONFIG  
+    except requests.exceptions.RequestException:
         return DEFAULT_CONFIG
-    # if os.path.exists(CONFIG_FILE):
-    #     try:
-    #         with open(CONFIG_FILE, 'r') as f:
-    #             data = json.load(f)
-    #             if 'esp_pct' not in data: data['esp_pct'] = {d: 0.0 for d in dias_semana}
-    #             if 'ideal_sup' not in data: data['ideal_sup'] = 2
-    #             if 'ideal_caj' not in data: data['ideal_caj'] = 3
-    #             if 'ideal_hos' not in data: data['ideal_hos'] = 3
-    #             if 'ideal_emp' not in data: data['ideal_emp'] = 2
-    #             if 'ideal_aux' not in data: data['ideal_aux'] = 2
-    #             if 's_emp' not in data: data['s_emp'] = 250.0
-    #             if 's_aux' not in data: data['s_aux'] = 250.0
-    #             return data
-    #     except:
-    #         return DEFAULT_CONFIG
-    # return DEFAULT_CONFIG
 
 def save_config(config):
     headers = {"X-API-Key": st.secrets["API_KEY"]}
-    #url_guardar = "https://localhost:7165/api/Simplex/guardarConfigMaestra"
     url_guardar = "https://operamx.no-ip.net/back/api_tickets/api/Simplex/guardarConfigMaestra"
     json_string = json.dumps(config)
-    payload = {'data': json_string}
-    try:
-        response = requests.post(url_guardar, data=payload,verify=False, headers= headers)
-        response.raise_for_status()
-        print("Configuración guardada en BD correctamente.")
-    except requests.exceptions.RequestException as e:
-        print(f"Error al conectar con la API: {e}")
-        raise
-    # with open(CONFIG_FILE, 'w') as f:
-    #     json.dump(config, f)
+    try: requests.post(url_guardar, data={'data': json_string},verify=False, headers= headers).raise_for_status()
+    except requests.exceptions.RequestException as e: print(e)
 
 config_data = load_config()
 
-# --- 🧠 INICIALIZACIÓN DE SESIÓN (BASE DE DATOS ANTI-LAG Y EN CEROS) ---
-if 'c_sup' not in st.session_state: st.session_state.c_sup = 0
-if 'c_caj' not in st.session_state: st.session_state.c_caj = 0
-if 'c_coc' not in st.session_state: st.session_state.c_coc = 0
-if 'c_sal' not in st.session_state: st.session_state.c_sal = 0
-if 'c_bar' not in st.session_state: st.session_state.c_bar = 0
-if 'c_emp' not in st.session_state: st.session_state.c_emp = 0
-if 'c_aux' not in st.session_state: st.session_state.c_aux = 0
-if 'c_hos' not in st.session_state: st.session_state.c_hos = 0
+# --- 🧠 INICIALIZACIÓN DE SESIÓN ---
+for var in ['c_sup', 'c_caj', 'c_coc', 'c_sal', 'c_bar', 'c_emp', 'c_aux', 'c_hos']:
+    if var not in st.session_state: st.session_state[var] = 0
 if 'descanso_sup' not in st.session_state: st.session_state.descanso_sup = "Lunes"
 
-# Contadores de versión dinámica para evitar StreamlitAPIException
 for p in puestos_fijos:
-    if f'counter_{p}' not in st.session_state:
-        st.session_state[f'counter_{p}'] = 0
-if 'counter_demanda' not in st.session_state:
-    st.session_state['counter_demanda'] = 0
+    if f'counter_{p}' not in st.session_state: st.session_state[f'counter_{p}'] = 0
+if 'counter_demanda' not in st.session_state: st.session_state['counter_demanda'] = 0
 
-# MEMORIA BASE (EN CEROS)
-if 'df_ventas' not in st.session_state:
-    st.session_state.df_ventas = pd.DataFrame({"Día": dias_semana, "Venta Proyectada ($)": [0.0] * 7})
+if 'df_ventas' not in st.session_state: st.session_state.df_ventas = pd.DataFrame({"Día": dias_semana, "Venta Proyectada ($)": [0.0] * 7})
 
 if 'df_fijos_dict' not in st.session_state:
     st.session_state.df_fijos_dict = {}
     for p in puestos_fijos:
         df_temp = pd.DataFrame([{"Día": d, "Matutino": False, "Intermedio": False, "Vespertino": False} for d in dias_semana])
-        df_temp['Matutino'] = df_temp['Matutino'].astype(bool)
-        df_temp['Intermedio'] = df_temp['Intermedio'].astype(bool)
-        df_temp['Vespertino'] = df_temp['Vespertino'].astype(bool)
         st.session_state.df_fijos_dict[p] = df_temp
 
 if 'df_demanda' not in st.session_state:
@@ -302,53 +192,53 @@ if 'db' not in st.session_state:
 if 'tope' not in st.session_state: st.session_state['tope'] = 20.0
 if 'config_unlocked' not in st.session_state: st.session_state['config_unlocked'] = False
 if 'resultados_diarios' not in st.session_state: st.session_state['resultados_diarios'] = None
-if 'preview_v' not in st.session_state:
-    st.session_state['preview_v'] = None; st.session_state['preview_f'] = None; st.session_state['preview_d'] = None
 if 'plantilla_ideal' not in st.session_state: st.session_state['plantilla_ideal'] = {}
-
-# ✅ CORRECCIÓN: Inicializar sucursal seleccionada en session_state
-if 'sucursal_seleccionada' not in st.session_state:
-    st.session_state.sucursal_seleccionada = None
+if 'sucursal_seleccionada' not in st.session_state: st.session_state.sucursal_seleccionada = None
 
 def sync_tope_slider(): st.session_state.tope = st.session_state.input_slider
 def sync_tope_num(): st.session_state.tope = st.session_state.input_num
 
-# --- 🚀 FUNCIONES DE CALLBACK (BOTONES MÁGICOS SIN SALTO DE PÁGINA) ---
-def update_all_fijos(puesto, turno, valor):
-    st.session_state.df_fijos_dict[puesto][turno] = valor
-    st.session_state[f'counter_{puesto}'] += 1
-
+# --- 🚀 FUNCIONES DE CALLBACK ---
+def update_all_fijos(puesto, turno, valor): st.session_state.df_fijos_dict[puesto][turno] = valor; st.session_state[f'counter_{puesto}'] += 1
 def clear_all_fijos(puesto):
     st.session_state.df_fijos_dict[puesto]['Matutino'] = False
     st.session_state.df_fijos_dict[puesto]['Intermedio'] = False
     st.session_state.df_fijos_dict[puesto]['Vespertino'] = False
     st.session_state[f'counter_{puesto}'] += 1
 
-def inyectar_horas_extra(dia_in, turno_in, area_in, hrs_in):
+# --- 🔥 FUNCIÓN QUIRÚRGICA MODIFICADA PARA MULTISELECCIÓN DE ÁREA 🔥 ---
+def inyectar_horas_extra(dias_in, turno_in, areas_in, hrs_in):
     df = st.session_state.df_demanda
-    dias_target = dias_semana if dia_in == "Todos" else [dia_in]
-    
-    if turno_in == "☀️ Matutino":
-        b_exacto = "10:00 a 14:00 (4 hrs)"
+    if "Todos" in dias_in or not dias_in:
+        dias_target = dias_semana
     else:
-        b_exacto = "22:00 a 01:00 (3 hrs)"
+        dias_target = dias_in
         
+    mapa_bloques = {
+        "☀️ Matutino (10:00 - 14:00)": "10:00 a 14:00 (4 hrs)",
+        "🌤️ Intermedio - Comida (14:00 - 17:00)": "14:00 a 17:00 (3 hrs)",
+        "⚡ Cruce Pico (17:00 - 18:00)": "17:00 a 18:00 (1 hr)",
+        "🌤️ Intermedio - Tarde (18:00 - 22:00)": "18:00 a 22:00 (4 hrs)",
+        "🌙 Vespertino (22:00 - 01:00)": "22:00 a 01:00 (3 hrs)"
+    }
+    b_exacto = mapa_bloques.get(turno_in, "10:00 a 14:00 (4 hrs)")
+    
     cols_target = []
-    if area_in in ["Todas", "🍳 Cocina"]: cols_target.append("🍳 Extra Cocina")
-    if area_in in ["Todas", "🍔 Salón"]: cols_target.append("🍔 Extra Salón")
-    if area_in in ["Todas", "🍺 Barra"]: cols_target.append("🍺 Extra Barra")
+    # Si seleccionan "Todas" o dejan el campo vacío, aplica a los 3 puestos operativos
+    if "Todas" in areas_in or not areas_in:
+        cols_target = ["🍳 Extra Cocina", "🍔 Extra Salón", "🍺 Extra Barra"]
+    else:
+        if "🍳 Cocina" in areas_in: cols_target.append("🍳 Extra Cocina")
+        if "🍔 Salón" in areas_in: cols_target.append("🍔 Extra Salón")
+        if "🍺 Barra" in areas_in: cols_target.append("🍺 Extra Barra")
     
     mask = (df['Día'].isin(dias_target)) & (df['Bloque'] == b_exacto)
-    for col in cols_target:
-        df.loc[mask, col] = float(hrs_in)
-    
+    for col in cols_target: df.loc[mask, col] = float(hrs_in)
     st.session_state['counter_demanda'] += 1
 
 def limpiar_horas_extra():
     df = st.session_state.df_demanda
-    df['🍳 Extra Cocina'] = 0.0
-    df['🍔 Extra Salón'] = 0.0
-    df['🍺 Extra Barra'] = 0.0
+    df['🍳 Extra Cocina'] = 0.0; df['🍔 Extra Salón'] = 0.0; df['🍺 Extra Barra'] = 0.0
     st.session_state['counter_demanda'] += 1
 
 def generar_machote():
@@ -356,43 +246,25 @@ def generar_machote():
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df_v_out = st.session_state.get('df_ventas_edited', st.session_state.df_ventas)
         df_v_out.to_excel(writer, sheet_name="Ventas", index=False)
-        
-        df_eq = pd.DataFrame({
-            "Parámetro": ["Supervisor", "Caja", "Cocinero", "Vendedor", "Barra", "Empacador", "Auxiliar", "Hostes", "Descanso_Supervisor"],
-            "Valor": [st.session_state.c_sup, st.session_state.c_caj, st.session_state.c_coc, st.session_state.c_sal, st.session_state.c_bar, st.session_state.c_emp, st.session_state.c_aux, st.session_state.c_hos, st.session_state.descanso_sup]
-        })
+        df_eq = pd.DataFrame({"Parámetro": ["Supervisor", "Caja", "Cocinero", "Vendedor", "Barra", "Empacador", "Auxiliar", "Hostes", "Descanso_Supervisor"], "Valor": [st.session_state.c_sup, st.session_state.c_caj, st.session_state.c_coc, st.session_state.c_sal, st.session_state.c_bar, st.session_state.c_emp, st.session_state.c_aux, st.session_state.c_hos, st.session_state.descanso_sup]})
         df_eq.to_excel(writer, sheet_name="Equipo_Actual", index=False)
-        
         filas_fijos_excel = []
         for d in dias_semana:
             fila = {"Día": d}
             for p in puestos_fijos:
                 df_p = st.session_state.get(f"df_fijos_{p}_edited", st.session_state.df_fijos_dict[p])
                 row_p = df_p[df_p['Día'] == d].iloc[0]
-                fila[f"{p}_Matutino"] = "Si" if row_p['Matutino'] else "No"
-                fila[f"{p}_Intermedio"] = "Si" if row_p['Intermedio'] else "No"
-                fila[f"{p}_Vespertino"] = "Si" if row_p['Vespertino'] else "No"
+                fila[f"{p}_Matutino"] = "Si" if row_p['Matutino'] else "No"; fila[f"{p}_Intermedio"] = "Si" if row_p['Intermedio'] else "No"; fila[f"{p}_Vespertino"] = "Si" if row_p['Vespertino'] else "No"
             filas_fijos_excel.append(fila)
         pd.DataFrame(filas_fijos_excel).to_excel(writer, sheet_name="Personal_Fijo", index=False)
-        
         df_d_out = st.session_state.get('df_demanda_edited', st.session_state.df_demanda)
         df_d_out.to_excel(writer, sheet_name="Demanda", index=False)
     return output.getvalue()
 
 # --- 🍔 ENCABEZADO REBEL WINGS ---
-st.markdown("<h1 style='text-align: center; color: #111; margin-bottom: 0; font-weight: bold;'>🍗 REBEL WINGS 🍔</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align: center; color: #555; margin-top: 0;'>🔥 SIMPLEX: Tu Asistente para controlar tu personal</h3>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #111; margin-bottom: 0; font-weight: bold;'>🍗 REBEL WINGS 🍔</h1><h3 style='text-align: center; color: #555; margin-top: 0;'>🔥 SIMPLEX: Tu Asistente para controlar tu personal</h3>", unsafe_allow_html=True)
 
-st.markdown("""
-<div style="background-color: #FFF9C4; padding: 15px; border-left: 5px solid #FBC02D; border-radius: 8px; margin-top: 10px; margin-bottom: 25px;">
-    <p style="font-size: 15px; color: #333; margin: 0; line-height: 1.5;">
-        <b>💡 ¿Qué es el Método Simplex?</b><br>
-        Simplex es un algoritmo matemático diseñado para encontrar <b>la decisión más inteligente</b> entre miles de combinaciones posibles. En <b>REBEL WINGS</b> lo aplicamos analizando tus ventas, las cargas de trabajo, capacidad productiva y el límite de presupuesto. Simplex cruza todos estos datos para <b>calcular matemáticamente los turnos perfectos</b>, garantizando que nunca falten manos, sin gastar un solo peso de más en nómina, considerando algunas reglas más definidas en la operación.
-    </p>
-</div>
-""", unsafe_allow_html=True)
-
-# --- 🎛️ BARRA LATERAL (CON TODAS LAS VARIABLES DE MODO EDICIÓN) ---
+# --- 🎛️ BARRA LATERAL ---
 with st.sidebar:
     st.header("💰 Límite Financiero")
     st.number_input("✏️ % exacto:", 10.0, 40.0, st.session_state.tope, 0.5, key="input_num", on_change=sync_tope_num)
@@ -416,10 +288,11 @@ with st.sidebar:
             new_s_aux = st.number_input("Salario 🧹 Auxiliar ($)", value=config_data.get('s_aux', 250.0))
             new_s_hos = st.number_input("Salario 🛎️ Hostes ($)", value=config_data['s_hos'])
             
-        with st.expander("⚙️ Capacidad Productiva"):
-            new_c_coc = st.number_input("Capacidad Productiva Cocina (comandas/hora)", value=config_data['c_coc'])
-            new_c_sal = st.number_input("Capacidad Productiva Salón (comandas/hora)", value=config_data['c_sal'])
-            new_c_bar = st.number_input("Capacidad Productiva Barra (comandas/hora)", value=config_data['c_bar'])
+        with st.expander("⚙️ Capacidad Productiva y Desgaste"):
+            new_c_coc = st.number_input("Capacidad Productiva Cocina (cmds/h)", value=config_data['c_coc'])
+            new_c_sal = st.number_input("Capacidad Productiva Salón (cmds/h)", value=config_data['c_sal'])
+            new_c_bar = st.number_input("Capacidad Productiva Barra (cmds/h)", value=config_data['c_bar'])
+            new_fatiga = st.number_input("📉 % Desgaste Humano al final del turno (Fatiga)", min_value=0.0, max_value=50.0, value=float(config_data.get('fatiga_pct', 15.0)), step=1.0)
             
         with st.expander("🎯 Límites de Plantilla Fija (Ideal)"):
             new_ideal_sup = st.number_input("Límite Ideal ⭐️ Supervisor", min_value=0, value=config_data.get('ideal_sup', 2))
@@ -428,29 +301,28 @@ with st.sidebar:
             new_ideal_aux = st.number_input("Límite Ideal 🧹 Auxiliar", min_value=0, value=config_data.get('ideal_aux', 2))
             new_ideal_hos = st.number_input("Límite Ideal 🛎️ Hostes", min_value=0, value=config_data.get('ideal_hos', 3))
             
-        with st.expander("🎉 Configurar Días Festivos"):
-            new_esp = {}
-            for d in dias_semana:
-                val_actual = float(config_data.get('esp_pct', {}).get(d, 0.0))
-                new_esp[d] = st.number_input(f"Día Festivo: Incremento para {d} (%)", min_value=0.0, value=val_actual, step=5.0)
+        with st.expander("🎉 Configurar Días Festivos (% Aumento por Turno)"):
+            df_esp_inicial = pd.DataFrame([
+                {"Día": d, "☀️ Matutino": config_data['esp_pct'][d]['M'], "🌤️ Intermedio": config_data['esp_pct'][d]['I'], "🌙 Vespertino": config_data['esp_pct'][d]['V']} for d in dias_semana
+            ])
+            edited_esp = st.data_editor(df_esp_inicial, hide_index=True, use_container_width=True)
+            new_esp = {row['Día']: {'M': float(row['☀️ Matutino']), 'I': float(row['🌤️ Intermedio']), 'V': float(row['🌙 Vespertino'])} for _, row in edited_esp.iterrows()}
                 
         if st.button("🔒 Guardar y Bloquear", type="primary"):
-            config_data.update({
-                's_coc': new_s_coc, 's_ven': new_s_ven, 's_bar': new_s_bar, 's_sup': new_s_sup, 's_caj': new_s_caj, 's_hos': new_s_hos, 
-                's_emp': new_s_emp, 's_aux': new_s_aux, 'c_coc': new_c_coc, 'c_sal': new_c_sal, 'c_bar': new_c_bar, 'esp_pct': new_esp,
-                'ideal_sup': new_ideal_sup, 'ideal_caj': new_ideal_caj, 'ideal_hos': new_ideal_hos, 'ideal_emp': new_ideal_emp, 'ideal_aux': new_ideal_aux
-            })
+            config_data.update({'s_coc': new_s_coc, 's_ven': new_s_ven, 's_bar': new_s_bar, 's_sup': new_s_sup, 's_caj': new_s_caj, 's_hos': new_s_hos, 's_emp': new_s_emp, 's_aux': new_s_aux, 'c_coc': new_c_coc, 'c_sal': new_c_sal, 'c_bar': new_c_bar, 'fatiga_pct': new_fatiga, 'esp_pct': new_esp, 'ideal_sup': new_ideal_sup, 'ideal_caj': new_ideal_caj, 'ideal_hos': new_ideal_hos, 'ideal_emp': new_ideal_emp, 'ideal_aux': new_ideal_aux})
             save_config(config_data)
             st.session_state['config_unlocked'] = False
             st.rerun()
 
     st.markdown("---")
-    st.header("🖨️ Exportar")
     modo_impresion = st.checkbox("📄 Vista para PDF")
 
 s_coc, s_ven, s_bar, s_sup, s_caj, s_hos, s_emp, s_aux = config_data['s_coc'], config_data['s_ven'], config_data['s_bar'], config_data['s_sup'], config_data['s_caj'], config_data['s_hos'], config_data.get('s_emp', 250.0), config_data.get('s_aux', 250.0)
 c_coc, c_sal, c_bar = config_data['c_coc'], config_data['c_sal'], config_data['c_bar']
-esp_pct = config_data.get('esp_pct', {d: 0.0 for d in dias_semana})
+fatiga_pct = float(config_data.get('fatiga_pct', 15.0))
+factor_fatiga_mult = 1.0 - (fatiga_pct / 100.0 / 2.0)  
+
+esp_pct = config_data.get('esp_pct', {d: {'M': 0.0, 'I': 0.0, 'V': 0.0} for d in dias_semana})
 ideal_sup_cfg, ideal_caj_cfg, ideal_hos_cfg, ideal_emp_cfg, ideal_aux_cfg = config_data.get('ideal_sup', 2), config_data.get('ideal_caj', 3), config_data.get('ideal_hos', 3), config_data.get('ideal_emp', 2), config_data.get('ideal_aux', 2)
 salarios_map = {'Supervisor': s_sup, 'Caja': s_caj, 'Cocinero': s_coc, 'Vendedor': s_ven, 'Barra': s_bar, 'Empacador': s_emp, 'Auxiliar': s_aux, 'Hostes': s_hos}
 
@@ -462,11 +334,9 @@ tab_carga, tab_diario, tab_semanal, tab_ideal = st.tabs(["📥 1. CARGA DE DATOS
 with tab_carga:
     st.markdown("### 1️⃣ PASO 1: Descarga o Sube tu Excel")
     c_up1, c_up2 = st.columns(2)
-    with c_up1: 
-        st.download_button(label="📥 Descargar Machote de Excel", data=generar_machote(), file_name="Machote_Semanal.xlsx", type="secondary")
+    with c_up1: st.download_button(label="📥 Descargar Machote de Excel", data=generar_machote(), file_name="Machote_Semanal.xlsx", type="secondary")
     with c_up2: 
         uploaded_file = st.file_uploader("Arrastra tu Excel aquí", type=["xlsx"], label_visibility="collapsed")
-        
         if uploaded_file is not None:
             if st.button("⚙️ Leer Datos del Excel", type="secondary"):
                 try:
@@ -474,10 +344,8 @@ with tab_carga:
                     df_eq = pd.read_excel(uploaded_file, sheet_name="Equipo_Actual")
                     df_f = pd.read_excel(uploaded_file, sheet_name="Personal_Fijo")
                     df_d = pd.read_excel(uploaded_file, sheet_name="Demanda")
-                    
                     st.session_state.df_ventas = df_v
                     if "editor_ventas" in st.session_state: del st.session_state["editor_ventas"]
-                    
                     st.session_state.c_sup = int(df_eq.loc[df_eq['Parámetro'] == 'Supervisor', 'Valor'].values[0])
                     st.session_state.c_caj = int(df_eq.loc[df_eq['Parámetro'] == 'Caja', 'Valor'].values[0])
                     st.session_state.c_coc = int(df_eq.loc[df_eq['Parámetro'] == 'Cocinero', 'Valor'].values[0])
@@ -503,100 +371,61 @@ with tab_carga:
                             
                     st.session_state.df_demanda = df_d
                     st.session_state['counter_demanda'] += 1
-                    
                     st.success("✅ ¡Datos de Excel leídos correctamente!")
                 except Exception as e: st.error(f"⚠️ Error al leer Excel: {e}")
 
-    # URL del endpoint
     url = "https://operamx.no-ip.net/back/api_tickets/api/Catalogos/getSucursales"
-
-    # Intentar obtener datos
     try:
         headers = {"X-API-Key": st.secrets["API_KEY"]}
         response = requests.get(url, timeout=10,headers=headers)
         response.raise_for_status()
         sucursales = response.json()
-    except Exception as e:
-        st.error(f"Error al conectar con el servidor: {e}")
-        sucursales = []
+    except Exception as e: sucursales = []
 
-    # ✅ CORRECCIÓN: Selector de sucursal persistente
     if sucursales:
-        # Determinar índice actual basado en session_state
         current_index = 0
         if st.session_state.sucursal_seleccionada is not None:
-            # Buscar por código (o por nombre)
             for i, s in enumerate(sucursales):
                 if s.get('cod') == st.session_state.sucursal_seleccionada.get('cod'):
                     current_index = i
                     break
-            else:
-                # Si no se encuentra, resetear
-                st.session_state.sucursal_seleccionada = None
-                current_index = 0
-
-        sucursal_seleccionada = st.selectbox(
-            "SELECCIONA UNA SUCURSAL:",
-            sucursales,
-            index=current_index,
-            format_func=lambda s: f"{s['name']}",
-            key="sucursal_widget"  # Clave para persistencia automática
-        )
-        # Guardar en session_state para uso posterior
+        sucursal_seleccionada = st.selectbox("SELECCIONA UNA SUCURSAL:", sucursales, index=current_index, format_func=lambda s: f"{s['name']}", key="sucursal_widget")
         st.session_state.sucursal_seleccionada = sucursal_seleccionada
-    else:
-        st.info("No se pudieron cargar las sucursales.")
-        sucursal_seleccionada = None
+    else: st.info("No se pudieron cargar las sucursales.")
             
-  # Año actual
     today = datetime.date.today()
-    year = today.year
+    current_year = today.year
+    years_list = list(range(current_year - 2, current_year + 4))
 
-    # Calcular la última semana del año
-    last_day = datetime.date(year, 12, 31)
-    max_week = week_number(last_day)
-    weeks = list(range(1, max_week + 1))
+    col_yr, col_wk = st.columns([1, 2])
+    with col_yr:
+        if 'selected_year' not in st.session_state:
+            st.session_state.selected_year = current_year
+        if st.session_state.selected_year not in years_list:
+            st.session_state.selected_year = current_year
+        selected_year = st.selectbox("📅 SELECCIONA EL AÑO", years_list, index=years_list.index(st.session_state.selected_year), key="year_select")
+        st.session_state.selected_year = selected_year
+        year = selected_year
 
-    # ✅ Inicializar semana en session_state si no existe
-    if 'selected_week' not in st.session_state:
-        current_week = week_number(today)
-        # Asegurar que la semana actual esté en la lista (por si el año cambió)
-        st.session_state.selected_week = current_week if current_week in weeks else weeks[0]
+    with col_wk:
+        last_day = datetime.date(year, 12, 31)
+        max_week = week_number(last_day)
+        weeks = list(range(1, max_week + 1))
 
-    # Asegurar que el valor guardado sea válido
-    if st.session_state.selected_week not in weeks:
-        st.session_state.selected_week = weeks[0]
+        if 'selected_week' not in st.session_state:
+            current_week = week_number(today)
+            st.session_state.selected_week = current_week if current_week in weeks else weeks[0]
+        if st.session_state.selected_week not in weeks: st.session_state.selected_week = weeks[0]
 
-    # Encontrar el índice para el selectbox
-    try:
-        default_index = weeks.index(st.session_state.selected_week)
-    except ValueError:
-        default_index = 0
+        try: default_index = weeks.index(st.session_state.selected_week)
+        except ValueError: default_index = 0
 
-    # Selectbox con persistencia
-    selected_week = st.selectbox(
-        "SELECCIONA LA SEMANA",
-        weeks,
-        index=default_index,
-        key="week_select"
-    )
-
-    # Actualizar session_state (aunque la key ya lo hace, es explícito)
-    st.session_state.selected_week = selected_week
-
-    # Calcular fechas usando la semana persistida
+        st.session_state.selected_week = st.selectbox("📆 SELECCIONA LA SEMANA", weeks, index=default_index, key="week_select")
+        
     fi, ff = get_week_dates(year, st.session_state.selected_week)
-    st.write(f"Semana **{st.session_state.selected_week}**: desde **{fi}** hasta **{ff}**")
+    st.write(f"Semana **{st.session_state.selected_week}** del año **{year}**: desde **{fi}** hasta **{ff}**")
 
-    # Botón CARGAR INFORMACIÓN (sin cambios, ya usa fi y ff actualizados)
-    st.button(
-        "CARGAR INFORMACIÓN",
-        on_click=lambda: consultarSimplex(st.session_state.sucursal_seleccionada["cod"], fi, ff) if st.session_state.sucursal_seleccionada is not None else st.warning("Selecciona una sucursal primero"),
-        use_container_width=True
-    )
-
-    if selected_week:
-        inicio, fin = get_week_dates(year, selected_week)
+    st.button("CARGAR INFORMACIÓN", on_click=lambda: consultarSimplex(st.session_state.sucursal_seleccionada["cod"], fi, ff) if st.session_state.sucursal_seleccionada is not None else st.warning("Selecciona una sucursal primero"), use_container_width=True)
 
     st.markdown("---")
     st.markdown("### 2️⃣ PASO 2: Verifica o Captura tu Operación (Manual)")
@@ -604,35 +433,21 @@ with tab_carga:
     t_ven, t_equ, t_fij, t_dem = st.tabs(["💰 Ventas", "👥 Tu Equipo Actual", "📌 Personal Fijo (Turnos)", "📊 Demanda Operativa"])
     
     with t_ven:
-        st.markdown("""<div style="background-color: #FFF9C4; padding: 15px; border-left: 5px solid #FBC02D; border-radius: 8px; margin-top: 5px; margin-bottom: 20px;"><p style="font-size: 14px; color: #333; margin: 0;"><b>💡 Guía:</b> Captura la proyección de venta diaria esperada. Simplex tomará este dinero y le aplicará el % Límite Financiero para calcular tu presupuesto máximo de nómina para cada día.</p></div>""", unsafe_allow_html=True)
         st.session_state.df_ventas_edited = st.data_editor(st.session_state.df_ventas, use_container_width=False, hide_index=True, height=300, key="editor_ventas")
     
     with t_equ:
-        st.markdown("""<div style="background-color: #FFF9C4; padding: 15px; border-left: 5px solid #FBC02D; border-radius: 8px; margin-top: 5px; margin-bottom: 20px;"><p style="font-size: 14px; color: #333; margin: 0;"><b>💡 Guía:</b> Aquí capturas cuánta gente tienes HOY en la nómina contratada. El sistema usará estos datos al final para decirte exactamente si te falta personal (para operar sin colapsar) o si te sobra gente (y estás fugando dinero). También eliges qué día descansa el Supervisor.</p></div>""", unsafe_allow_html=True)
         st.session_state['descanso_sup'] = st.selectbox("🏖️ Día de Descanso del Supervisor:", dias_semana, index=dias_semana.index(st.session_state.descanso_sup) if st.session_state.descanso_sup in dias_semana else 1)
         c_rh1, c_rh2, c_rh3, c_rh4 = st.columns(4)
-        with c_rh1:
-            st.session_state['c_sup'] = st.number_input("⭐️ Supervisor", 0, value=st.session_state.get('c_sup', 0))
-            st.session_state['c_caj'] = st.number_input("🖥️ Caja", 0, value=st.session_state.get('c_caj', 0))
-        with c_rh2:
-            st.session_state['c_coc'] = st.number_input("🍳 Cocinero", 0, value=st.session_state.get('c_coc', 0))
-            st.session_state['c_sal'] = st.number_input("🍔 Vendedor", 0, value=st.session_state.get('c_sal', 0))
-        with c_rh3:
-            st.session_state['c_bar'] = st.number_input("🍺 Barra", 0, value=st.session_state.get('c_bar', 0))
-            st.session_state['c_emp'] = st.number_input("📦 Empacador", 0, value=st.session_state.get('c_emp', 0))
-        with c_rh4:
-            st.session_state['c_aux'] = st.number_input("🧹 Auxiliar", 0, value=st.session_state.get('c_aux', 0))
-            st.session_state['c_hos'] = st.number_input("🛎️ Hostes", 0, value=st.session_state.get('c_hos', 0))
+        with c_rh1: st.session_state['c_sup'] = st.number_input("⭐️ Supervisor", 0, value=st.session_state.get('c_sup', 0)); st.session_state['c_caj'] = st.number_input("🖥️ Caja", 0, value=st.session_state.get('c_caj', 0))
+        with c_rh2: st.session_state['c_coc'] = st.number_input("🍳 Cocinero", 0, value=st.session_state.get('c_coc', 0)); st.session_state['c_sal'] = st.number_input("🍔 Vendedor", 0, value=st.session_state.get('c_sal', 0))
+        with c_rh3: st.session_state['c_bar'] = st.number_input("🍺 Barra", 0, value=st.session_state.get('c_bar', 0)); st.session_state['c_emp'] = st.number_input("📦 Empacador", 0, value=st.session_state.get('c_emp', 0))
+        with c_rh4: st.session_state['c_aux'] = st.number_input("🧹 Auxiliar", 0, value=st.session_state.get('c_aux', 0)); st.session_state['c_hos'] = st.number_input("🛎️ Hostes", 0, value=st.session_state.get('c_hos', 0))
             
     with t_fij:
-        st.markdown("""<div style="background-color: #FFF9C4; padding: 15px; border-left: 5px solid #FBC02D; border-radius: 8px; margin-top: 5px; margin-bottom: 20px;"><p style="font-size: 14px; color: #333; margin: 0;"><b>💡 Guía:</b> Activa la casilla si quieres obligar al sistema a poner a alguien de este puesto en ese turno. Déjala vacía si prefieres darle el día o el turno de descanso. (Usa los botones rápidos para llenar una columna entera en un segundo).</p></div>""", unsafe_allow_html=True)
         tabs_puestos = st.tabs(["⭐️ Supervisor", "🖥️ Caja", "🛎️ Hostes", "📦 Empacador", "🧹 Auxiliar"])
-        
         for idx, p in enumerate(puestos_fijos):
             with tabs_puestos[idx]:
-                
                 df_current = st.session_state.df_fijos_dict[p]
-                
                 b1, b2, b3, b4 = st.columns(4)
                 b1.button(f"🧹 Limpiar Todo", key=f"btn_c_{p}", on_click=clear_all_fijos, args=(p,))
                 b2.button(f"✅ Todo Matutino", key=f"btn_m_{p}", on_click=update_all_fijos, args=(p, 'Matutino', True))
@@ -640,47 +455,37 @@ with tab_carga:
                 b4.button(f"✅ Todo Vespertino", key=f"btn_v_{p}", on_click=update_all_fijos, args=(p, 'Vespertino', True))
                 
                 st.session_state[f"df_fijos_{p}_edited"] = st.data_editor(
-                    df_current, 
-                    use_container_width=True, 
-                    hide_index=True, 
-                    height=295, 
-                    key=f"editor_fijos_{p}_{st.session_state[f'counter_{p}']}",
-                    column_config={
-                        "Día": st.column_config.TextColumn("Día", disabled=True),
-                        "Matutino": st.column_config.CheckboxColumn("☀️ Matutino", default=False),
-                        "Intermedio": st.column_config.CheckboxColumn("🌤️ Intermedio", default=False),
-                        "Vespertino": st.column_config.CheckboxColumn("🌙 Vespertino", default=False)
-                    }
+                    df_current, use_container_width=True, hide_index=True, height=295, key=f"editor_fijos_{p}_{st.session_state[f'counter_{p}']}",
+                    column_config={"Día": st.column_config.TextColumn("Día", disabled=True), "Matutino": st.column_config.CheckboxColumn("☀️ Matutino", default=False), "Intermedio": st.column_config.CheckboxColumn("🌤️ Intermedio", default=False), "Vespertino": st.column_config.CheckboxColumn("🌙 Vespertino", default=False)}
                 )
         
     with t_dem:
-        st.markdown("""<div style="background-color: #FFF9C4; padding: 15px; border-left: 5px solid #FBC02D; border-radius: 8px; margin-top: 5px; margin-bottom: 20px;"><p style="font-size: 14px; color: #333; margin: 0;"><b>💡 Guía:</b>
-        <br><b>1.</b> Captura cuántas comandas estimas procesar por bloque de horas (esto mide tu "Rush"). <b>Nota:</b> El Panel Rápido solo inyecta horas en apertura (Bloque 1) o cierre (Bloque 5). Si ocupas horas extra en otro horario, captúralo manualmente en la tabla.</p><span style="font-size:14px;"><b>2.</b> Demanda operativa de cada puesto de trabajo:</span> <p style="margin:0px; font-size: 14px"><strong>COCINA:</strong> Todas las comandas de cocina</p> <p style="margin:0px; font-size: 14px"><strong>SALÓN:</strong> Todas las comandas de cocina y barra, sin delivery</p><p style="margin:0px; font-size: 14px"><strong>BARRA:</strong> Todas las comandas de bebidas que requieren preparación</p></div>""", unsafe_allow_html=True)
-
+        # --- 🔥 MEJORA QUIRÚRGICA: MULTISELECCIÓN EN ÁREAS, DÍAS Y HORARIOS 🔥 ---
         st.markdown("#### ⚡ Panel de Asignación Rápida (Horas Extra)")
-        
-        c_i1, c_i2, c_i3, c_i4, c_i5, c_i6 = st.columns([1.5, 1.5, 1.5, 1, 1.5, 1.5])
-        with c_i1: dia_qa = st.selectbox("📅 Día", ["Todos"] + dias_semana)
-        with c_i2: bloque_qa = st.selectbox("🕒 Turno", ["☀️ Matutino", "🌙 Vespertino"])
-        with c_i3: area_qa = st.selectbox("🎯 Área", ["Todas", "🍳 Cocina", "🍔 Salón", "🍺 Barra"])
-        with c_i4: hrs_qa = st.number_input("⏱️ Horas", 0.0, 5.0, 1.0, 0.5)
-        
+        c_i1, c_i2, c_i3, c_i4, c_i5, c_i6 = st.columns([2, 2, 2, 1, 1.5, 1.5])
+        with c_i1: 
+            dias_qa = st.multiselect("📅 Día(s)", ["Todos"] + dias_semana, default=["Todos"], placeholder="Elige día(s)...")
+        with c_i2: 
+            bloque_qa = st.selectbox("🕒 Turno / Horario", [
+                "☀️ Matutino (10:00 - 14:00)", 
+                "🌤️ Intermedio - Comida (14:00 - 17:00)", 
+                "⚡ Cruce Pico (17:00 - 18:00)", 
+                "🌤️ Intermedio - Tarde (18:00 - 22:00)", 
+                "🌙 Vespertino (22:00 - 01:00)"
+            ])
+        with c_i3: 
+            areas_qa = st.multiselect("🎯 Área(s)", ["Todas", "🍳 Cocina", "🍔 Salón", "🍺 Barra"], default=["Todas"], placeholder="Elige área(s)...")
+        with c_i4: 
+            hrs_qa = st.number_input("⏱️ Horas", 0.0, 5.0, 1.0, 0.5)
         with c_i5: 
             st.markdown("<br>", unsafe_allow_html=True)
-            st.button("⚡ Inyectar Extras", type="primary", use_container_width=True, on_click=inyectar_horas_extra, args=(dia_qa, bloque_qa, area_qa, hrs_qa))
-        with c_i6:
+            st.button("⚡ Inyectar Extras", type="primary", use_container_width=True, on_click=inyectar_horas_extra, args=(dias_qa, bloque_qa, areas_qa, hrs_qa))
+        with c_i6: 
             st.markdown("<br>", unsafe_allow_html=True)
             st.button("🧹 Borrar Extras", type="secondary", use_container_width=True, on_click=limpiar_horas_extra)
             
         st.markdown("---")
-        st.markdown("**📊 Tabla Detallada de Operación**")
-        st.session_state.df_demanda_edited = st.data_editor(
-            st.session_state.df_demanda, 
-            use_container_width=True, 
-            hide_index=True, 
-            height=1300, 
-            key=f"editor_demanda_{st.session_state['counter_demanda']}"
-        )
+        st.session_state.df_demanda_edited = st.data_editor(st.session_state.df_demanda, use_container_width=True, hide_index=True, height=1300, key=f"editor_demanda_{st.session_state['counter_demanda']}")
 
     st.markdown("---")
     st.markdown("### 3️⃣ PASO 3: Optimización Matemática")
@@ -735,17 +540,33 @@ with tab_carga:
             vars_personal = pl.LpVariable.dicts(f"Pers_{d}", [(r, t) for r in roles for t in turnos], lowBound=0, cat='Integer')
             modelo += pl.lpSum([vars_personal[(r, t)] for r in roles for t in turnos])
             
-            factor_crecimiento = 1.0 + (float(esp_pct.get(d, 0.0)) / 100.0)
-            venta_ajustada = st.session_state.db['ventas'][d] * factor_crecimiento
+            pct_M = esp_pct[d]['M'] / 100.0
+            pct_I = esp_pct[d]['I'] / 100.0
+            pct_V = esp_pct[d]['V'] / 100.0
+            
+            factores_bloque = [
+                1.0 + pct_M,                           
+                1.0 + max(pct_M, pct_I),               
+                1.0 + max(pct_M, pct_I, pct_V),        
+                1.0 + max(pct_I, pct_V),               
+                1.0 + pct_V                            
+            ]
+            
+            factor_crecimiento_max = 1.0 + max(pct_M, pct_I, pct_V)
+            venta_ajustada = st.session_state.db['ventas'][d] * factor_crecimiento_max
             venta_total_semana += venta_ajustada 
             
-            demandas = {'Cocina': [cmd * factor_crecimiento for cmd in st.session_state.db['demanda'][d]['cc']], 'Salon':  [cmd * factor_crecimiento for cmd in st.session_state.db['demanda'][d]['cs']], 'Barra':  [cmd * factor_crecimiento for cmd in st.session_state.db['demanda'][d]['cb']]}
+            demandas = {
+                'Cocina': [st.session_state.db['demanda'][d]['cc'][i] * factores_bloque[i] for i in range(5)],
+                'Salon':  [st.session_state.db['demanda'][d]['cs'][i] * factores_bloque[i] for i in range(5)],
+                'Barra':  [st.session_state.db['demanda'][d]['cb'][i] * factores_bloque[i] for i in range(5)]
+            }
             extras = {'Cocina': st.session_state.db['demanda'][d]['ec'], 'Salon':  st.session_state.db['demanda'][d]['es'], 'Barra':  st.session_state.db['demanda'][d]['eb']}
             plot_data_req = {'Cocina': [], 'Salon': [], 'Barra': []}; plot_data_prov = {'Cocina': [], 'Salon': [], 'Barra': []}
             
             for r in roles:
                 for i in range(5):
-                    req_horas = (demandas[r][i] / capacidades[r]) + extras[r][i]
+                    req_horas = (demandas[r][i] / (capacidades[r] * factor_fatiga_mult)) + extras[r][i]  
                     if i == 0: gente = vars_personal[(r, 'M')]
                     elif i == 1: gente = vars_personal[(r, 'M')] + vars_personal[(r, 'I')]
                     elif i == 2: gente = vars_personal[(r, 'M')] + vars_personal[(r, 'I')] + vars_personal[(r, 'V')]
@@ -765,7 +586,7 @@ with tab_carga:
                 costo_total_semana += c_total_dia
                 for r in roles:
                     for i in range(5):
-                        plot_data_req[r].append(round((demandas[r][i] / capacidades[r]) + extras[r][i], 1))
+                        plot_data_req[r].append(round((demandas[r][i] / (capacidades[r] * factor_fatiga_mult)) + extras[r][i], 1))
                         if i == 0: g = vars_personal[(r, 'M')].varValue
                         elif i == 1: g = vars_personal[(r, 'M')].varValue + vars_personal[(r, 'I')].varValue
                         elif i == 2: g = vars_personal[(r, 'M')].varValue + vars_personal[(r, 'I')].varValue + vars_personal[(r, 'V')].varValue
@@ -777,7 +598,9 @@ with tab_carga:
                     'M': [vars_personal[('Cocina','M')].varValue, vars_personal[('Salon','M')].varValue, vars_personal[('Barra','M')].varValue, int(st.session_state.db['fijos'][d]['cm']), int(sm_val), int(st.session_state.db['fijos'][d]['hm']), int(st.session_state.db['fijos'][d]['em']), int(st.session_state.db['fijos'][d]['am'])] ,
                     'I': [vars_personal[('Cocina','I')].varValue, vars_personal[('Salon','I')].varValue, vars_personal[('Barra','I')].varValue, int(st.session_state.db['fijos'][d]['ci']), int(si_val), int(st.session_state.db['fijos'][d]['hi']), int(st.session_state.db['fijos'][d]['ei']), int(st.session_state.db['fijos'][d]['ai'])] ,
                     'V': [vars_personal[('Cocina','V')].varValue, vars_personal[('Salon','V')].varValue, vars_personal[('Barra','V')].varValue, int(st.session_state.db['fijos'][d]['cv']), int(sv_val), int(st.session_state.db['fijos'][d]['hv']), int(st.session_state.db['fijos'][d]['ev']), int(st.session_state.db['fijos'][d]['av'])] ,
-                    'Costo': c_total_dia, 'Costo_Fijo': c_fijo_dia, 'Costo_Var': pl.value(c_var_dia), 'Venta_Ajustada': venta_ajustada, 'Es_Especial': factor_crecimiento > 1.0, 'Pct_Extra': float(esp_pct.get(d, 0.0)), 'req': plot_data_req, 'prov': plot_data_prov, 'demanda_bruta': demandas
+                    'Costo': c_total_dia, 'Costo_Fijo': c_fijo_dia, 'Costo_Var': pl.value(c_var_dia), 'Venta_Ajustada': venta_ajustada, 
+                    'Es_Especial': factor_crecimiento_max > 1.0, 'Pct_Extra': factor_crecimiento_max * 100 - 100, 
+                    'req': plot_data_req, 'prov': plot_data_prov, 'demanda_bruta': demandas
                 }
                 turnos_semanales['Cocina'] += sum([vars_personal[('Cocina', t)].varValue for t in turnos]); turnos_semanales['Salon'] += sum([vars_personal[('Salon', t)].varValue for t in turnos]); turnos_semanales['Barra'] += sum([vars_personal[('Barra', t)].varValue for t in turnos])
             else: dias_inviables.append(d)
@@ -788,7 +611,6 @@ with tab_carga:
         else:
             st.session_state['resultados_diarios'] = resultados_diarios; st.session_state['venta_total_semana_calc'] = venta_total_semana; st.session_state['costo_total_semana_calc'] = costo_total_semana
             
-            # --- NUEVA LÓGICA DE PLANTILLA IDEAL (ESCUDO ANTI-DOBLETES) ---
             max_cocina_diario = max([int(resultados_diarios[d]['M'][0] + resultados_diarios[d]['I'][0] + resultados_diarios[d]['V'][0]) for d in dias_semana])
             max_vendedor_diario = max([int(resultados_diarios[d]['M'][1] + resultados_diarios[d]['I'][1] + resultados_diarios[d]['V'][1]) for d in dias_semana])
             max_barra_diario = max([int(resultados_diarios[d]['M'][2] + resultados_diarios[d]['I'][2] + resultados_diarios[d]['V'][2]) for d in dias_semana])
@@ -810,14 +632,12 @@ with tab_carga:
 # ==========================================
 with tab_diario:
     if st.session_state['resultados_diarios'] is not None:
-        st.markdown("""<div style="background-color: #E8F4F8; padding: 15px; border-left: 5px solid #1F77B4; border-radius: 5px; margin-bottom: 20px;"><h4 style="margin-top: 0; color: #1F77B4;">🧠 Análisis Ejecutivo del Cálculo Diario</h4><p style="font-size: 14px; color: #333;"><b>1. Puestos Operativos (🍳 Cocinero, 🍔 Vendedor, 🍺 Barra):</b> El algoritmo analizó las ventas y comandas esperadas. Dividió el volumen entre la capacidad de cada puesto y asignó a las personas justas para cubrir los picos de "Rush", garantizando el servicio sin pasarse del límite de nómina.<br><b>2. Puestos Estructurales (⭐️ Supervisor, 🖥️ Caja, 📦 Empacador, 🧹 Auxiliar, 🛎️ Hostes):</b> Estas posiciones no dependen del volumen de clientes. El sistema leyó tu Machote de Excel para este día y asignó (o descansó) al personal tal como lo configuraste.</p></div>""", unsafe_allow_html=True)
         dia_sel = st.selectbox("👉 Elige el día a analizar:", dias_semana, key="sel_dia_print")
         res = st.session_state['resultados_diarios'][dia_sel]
-        venta = res['Venta_Ajustada']
-        pct = (res['Costo'] / venta) * 100 if venta > 0 else 0
+        venta = res['Venta_Ajustada']; pct = (res['Costo'] / venta) * 100 if venta > 0 else 0
         
         st.markdown("---")
-        if res['Es_Especial']: st.success(f"🎉 **¡DÍA ESPECIAL ACTIVO!** Incremento del **{res['Pct_Extra']:g}%**")
+        if res['Es_Especial']: st.success(f"🎉 **¡DÍA ESPECIAL ACTIVO!** Aumento Máximo Cruzado: **+{res['Pct_Extra']:.1f}%**")
         if dia_sel == st.session_state.get('descanso_sup', ''): st.info(f"🏖️ **DESCANSO DEL SUPERVISOR:** Hoy no se presupuestó al ⭐️ Supervisor.")
 
         col1, col2, col3 = st.columns(3)
@@ -833,12 +653,52 @@ with tab_diario:
         df_d = pd.DataFrame([{"Turno": "☀️ Matutino (10-18)", "⭐️ Supervisor": int(res['M'][4]), "🖥️ Caja": int(res['M'][3]), "🍳 Cocinero": int(res['M'][0]), "🍔 Vendedor": int(res['M'][1]), "🍺 Barra": int(res['M'][2]), "📦 Empacador": int(res['M'][6]), "🧹 Auxiliar": int(res['M'][7]), "🛎️ Hostes": int(res['M'][5])}, {"Turno": "🌤️ Intermedio (14-22)", "⭐️ Supervisor": int(res['I'][4]), "🖥️ Caja": int(res['I'][3]), "🍳 Cocinero": int(res['I'][0]), "🍔 Vendedor": int(res['I'][1]), "🍺 Barra": int(res['I'][2]), "📦 Empacador": int(res['I'][6]), "🧹 Auxiliar": int(res['I'][7]), "🛎️ Hostes": int(res['I'][5])}, {"Turno": "🌙 Vespertino (17-01)", "⭐️ Supervisor": int(res['V'][4]), "🖥️ Caja": int(res['V'][3]), "🍳 Cocinero": int(res['V'][0]), "🍔 Vendedor": int(res['V'][1]), "🍺 Barra": int(res['V'][2]), "📦 Empacador": int(res['V'][6]), "🧹 Auxiliar": int(res['V'][7]), "🛎️ Hostes": int(res['V'][5])}, {"Turno": "📌 TOTAL DÍA", "⭐️ Supervisor": t_sup, "🖥️ Caja": t_caj, "🍳 Cocinero": t_coc, "🍔 Vendedor": t_ven, "🍺 Barra": t_bar, "📦 Empacador": t_emp, "🧹 Auxiliar": t_aux, "🛎️ Hostes": t_hos}])
         st.dataframe(df_d.style.set_properties(**{'text-align': 'center'}).apply(lambda row: ['background-color: #1F77B4; color: white; font-weight: bold;'] * len(row) if "📌 TOTAL" in str(row['Turno']) else [''] * len(row), axis=1), height=195, use_container_width=False, hide_index=True)
         st.markdown("---")
+
+        st.markdown("### 📈 Tablero Visual de Saturación y Desgaste Humano")
+        st.write(f"Visualización ejecutiva de la carga operativa por turno, aplicando un **Factor de Fatiga del {fatiga_pct:.1f}%** (caída natural de velocidad al cierre de jornada):")
+        
+        turnos_nombres = ["☀️ Matutino (10:00 - 18:00)", "🌤️ Intermedio (14:00 - 22:00)", "🌙 Vespertino (17:00 - 01:00)"]
+        llaves_t = ['M', 'I', 'V']; roles_op = ["🍳 Cocinero", "🍔 Vendedor", "🍺 Barra"]
+        indices_rol = [0, 1, 2]; llaves_rol = ["Cocina", "Salon", "Barra"]; caps_op = [c_coc, c_sal, c_bar]
+        
+        for t_idx, t_nom in enumerate(turnos_nombres):
+            st.markdown(f"<h4 style='color: #1F77B4; margin-top: 15px; border-bottom: 2px solid #1F77B4; padding-bottom: 5px;'>{t_nom}</h4>", unsafe_allow_html=True)
+            cols_t = st.columns(3); t_key = llaves_t[t_idx]
+            for r_idx, col in enumerate(cols_t):
+                with col:
+                    gente_r = int(res[t_key][indices_rol[r_idx]])
+                    cap_val_r = caps_op[r_idx]
+                    cap_promedio_r = cap_val_r * factor_fatiga_mult  
+                    rol_str = llaves_rol[r_idx]
+                    
+                    blk_idx_r = [0, 1, 2] if t_key == 'M' else ([1, 2, 3] if t_key == 'I' else [2, 3, 4])
+                    cmds_r = sum(res['demanda_bruta'][rol_str][i] for i in blk_idx_r)
+                    extras_r_db = {'Cocina': st.session_state.db['demanda'][dia_sel]['ec'], 'Salon': st.session_state.db['demanda'][dia_sel]['es'], 'Barra': st.session_state.db['demanda'][dia_sel]['eb']}
+                    extras_r = sum(extras_r_db[rol_str][i] for i in blk_idx_r)
+                    
+                    hrs_req_r = round((cmds_r / cap_promedio_r) + extras_r, 1) if cap_promedio_r > 0 else 0
+                    hrs_aut_r = gente_r * 8
+                    cmds_aut_r = hrs_aut_r * cap_promedio_r
+                    pct_sat_r = round((hrs_req_r / hrs_aut_r) * 100, 1) if hrs_aut_r > 0 else 0
+                    
+                    bar_col_r = "#2CA02C" if pct_sat_r <= 100 else "#FF7F0E"
+                    bar_wid_r = min(pct_sat_r, 100)
+                    txt_card_op = f"<span style='color: #D65A31; font-size: 12px; font-weight: bold;'>🔄 Cobertura cruzada (Empalme de turnos)</span>" if hrs_req_r > hrs_aut_r else f"<span style='color: #2CA02C; font-size: 12px; font-weight: bold;'>✅ Cobertura Autónoma Asegurada</span>"
+                        
+                    st.markdown(f"""<div style="background-color: #FFF; border: 1px solid #CCC; border-radius: 10px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EEE; padding-bottom: 8px; margin-bottom: 10px;">
+<strong style="font-size: 16px; color: #333;">{roles_op[r_idx]}</strong><span style="background-color: #1F77B4; color: white; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: bold;">{gente_r} Pers.</span></div>
+<div style="font-size: 13px; color: #555; margin-bottom: 8px;">
+<div style="display: flex; justify-content: space-between;"><span>Demanda Esperada:</span> <b>{cmds_r:,.0f} cmds</b></div>
+<div style="display: flex; justify-content: space-between;"><span>Cap. Real (C/ Fatiga):</span> <b>{cmds_aut_r:,.0f} cmds</b></div></div>
+<div style="margin-bottom: 8px;"><div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #666; margin-bottom: 3px;">
+<span>Saturación del Turno:</span> <span style="color: {bar_col_r};">{pct_sat_r}%</span></div>
+<div style="background-color: #E9ECEF; border-radius: 6px; width: 100%; height: 10px; overflow: hidden;"><div style="background-color: {bar_col_r}; width: {bar_wid_r}%; height: 100%;"></div></div></div>{txt_card_op}</div>""", unsafe_allow_html=True)
+        st.markdown("---")
         
         st.markdown("### 💎 Radiografía del Restaurante")
         df_rush = pd.DataFrame({'Bloque Horario': bloques * 3, 'Comandas': res['demanda_bruta']['Cocina'] + res['demanda_bruta']['Salon'] + res['demanda_bruta']['Barra'], 'Área': ['🍳 Cocina']*5 + ['🍔 Salón']*5 + ['🍺 Barra']*5})
         st.plotly_chart(px.area(df_rush, x='Bloque Horario', y='Comandas', color='Área', color_discrete_map={'🍳 Cocina': '#FF7F0E', '🍔 Salón': '#1F77B4', '🍺 Barra': '#2CA02C'}), use_container_width=True)
-        
-        st.markdown("""<div style="background-color: #FFF9C4; padding: 15px; border-left: 5px solid #FBC02D; border-radius: 8px; margin-top: 5px; margin-bottom: 25px;"><h5 style="margin-top: 0; color: #B38600;">💡 Guía rápida</h5><p style="font-size: 14px; color: #333; margin: 0;">Este gráfico mide el volumen de trabajo en el día. Entre más alta sea la montaña, más clientes hay y más presión recae sobre esa área específica.</p></div>""", unsafe_allow_html=True)
         
         st.markdown("### ⚖️ Cobertura de Personal")
         area = st.radio("Elige el Área Operativa:", ["Cocina", "Salon", "Barra"], horizontal=True)
@@ -849,23 +709,9 @@ with tab_diario:
         fig_bar = px.bar(pd.DataFrame({'Horario': bloques * 2, 'Horas': res['req'][area] + res['prov'][area], 'Indicador': ['1. Horas NECESARIAS (Demanda)']*5 + ['2. Horas PROGRAMADAS (Personal)']*5}), x='Horario', y='Horas', color='Indicador', barmode='group', text_auto='.1f', color_discrete_map={'1. Horas NECESARIAS (Demanda)': '#d62728', '2. Horas PROGRAMADAS (Personal)': '#2ca02c'})
         fig_bar.update_layout(legend_title=None, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         st.plotly_chart(fig_bar, use_container_width=True)
-        
-        st.markdown(f"""
-        <div style="background-color: #FFF9C4; padding: 15px; border-left: 5px solid #FBC02D; border-radius: 8px; margin-top: 5px; margin-bottom: 25px;">
-            <h5 style="margin-top: 0; color: #B38600;">💡 Guía rápida</h5>
-            <p style="font-size: 14px; color: #333; margin: 0;">
-                <b>La meta:</b> La barra Verde siempre debe cubrir o superar a la Roja. <b>Si dejamos menos personas de las indicadas, no se alcanza a cubrir la necesidad y el personal no sería suficiente para garantizar el servicio.</b><br><br>
-                <b>¿Por qué pide {p_p} personas si solo necesito {p_n:.1f}?</b><br>
-                El {p_n:.1f} es un promedio matemático. El sistema detecta el "Rush" y te asigna a las {p_p} personas completas necesarias en ese pico crítico para que el servicio no colapse.<br><br>
-                <b>¿Por qué hay 5 horarios en la gráfica si solo operamos con 3 turnos?</b><br>
-                Tenemos 3 turnos: <b>MATUTINO</b>, <b>INTERMEDIO</b> y <b>VESPERTINO</b>. Al empalmarse estos turnos, el día se divide en 5 bloques operativos ({", ".join(bloques)}). Las montañas verdes más altas se forman justo cuando los turnos se cruzan.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
 
 with tab_semanal:
     if st.session_state['resultados_diarios'] is not None:
-        st.markdown("""<div style="background-color: #FFF3E0; padding: 15px; border-left: 5px solid #FF9800; border-radius: 5px; margin-bottom: 20px;"><h4 style="margin-top: 0; color: #FF9800;">🧠 Análisis Ejecutivo Semanal</h4><p style="font-size: 14px; color: #333;">La <b>Plantilla Maestra Semanal</b> consolida todos los turnos diarios; es tu hoja de ruta final para convocar al equipo sin salirte del presupuesto.</p></div>""", unsafe_allow_html=True)
         v_tot = st.session_state['venta_total_semana_calc']
         c_tot = st.session_state['costo_total_semana_calc']
         pct = (c_tot / v_tot) * 100 if v_tot > 0 else 0
@@ -880,19 +726,23 @@ with tab_semanal:
         fig_sem.update_layout(legend_title=None, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         st.plotly_chart(fig_sem, use_container_width=True)
         
-        st.markdown("""<div style="background-color: #FFF9C4; padding: 15px; border-left: 5px solid #FBC02D; border-radius: 8px; margin-top: 5px; margin-bottom: 25px;"><h5 style="margin-top: 0; color: #B38600;">💡 Guía rápida</h5><p style="font-size: 14px; color: #333; margin: 0;">Compara visualmente tus ventas contra tu nómina. Permite detectar de un vistazo los días más rentables (barras verdes altas) contra los días más caros de operar.</p></div>""", unsafe_allow_html=True)
-        
         st.markdown("---"); st.subheader("📋 Tu Plantilla Maestra Semanal")
         filas_maestras = []
         for d in dias_semana:
             res = st.session_state['resultados_diarios'][d]
             n_dia = d
-            if res['Es_Especial']: n_dia += f" ⭐ (+{res['Pct_Extra']:g}%)"
             if d == st.session_state.get('descanso_sup', ''): n_dia += " 🏖️(Descanso Sup)"
             
-            filas_maestras.append({"Día": n_dia, "Turno": "☀️ Matutino", "⭐️ Supervisor": int(res['M'][4]), "🖥️ Caja": int(res['M'][3]), "🍳 Cocinero": int(res['M'][0]), "🍔 Vendedor": int(res['M'][1]), "🍺 Barra": int(res['M'][2]), "📦 Empacador": int(res['M'][6]), "🧹 Auxiliar": int(res['M'][7]), "🛎️ Hostes": int(res['M'][5]), "Costo del Día": f"$ {res['Costo']:,.2f}"})
-            filas_maestras.append({"Día": n_dia, "Turno": "🌤️ Intermedio", "⭐️ Supervisor": int(res['I'][4]), "🖥️ Caja": int(res['I'][3]), "🍳 Cocinero": int(res['I'][0]), "🍔 Vendedor": int(res['I'][1]), "🍺 Barra": int(res['I'][2]), "📦 Empacador": int(res['I'][6]), "🧹 Auxiliar": int(res['I'][7]), "🛎️ Hostes": int(res['I'][5]), "Costo del Día": "---"})
-            filas_maestras.append({"Día": n_dia, "Turno": "🌙 Vespertino", "⭐️ Supervisor": int(res['V'][4]), "🖥️ Caja": int(res['V'][3]), "🍳 Cocinero": int(res['V'][0]), "🍔 Vendedor": int(res['V'][1]), "🍺 Barra": int(res['V'][2]), "📦 Empacador": int(res['V'][6]), "🧹 Auxiliar": int(res['V'][7]), "🛎️ Hostes": int(res['V'][5]), "Costo del Día": "---"})
+            pcts = esp_pct.get(d, {'M': 0.0, 'I': 0.0, 'V': 0.0})
+            pm, pi, pv = float(pcts.get('M', 0.0)), float(pcts.get('I', 0.0)), float(pcts.get('V', 0.0))
+            
+            t_m = f"☀️ Matutino (+{pm:g}%) ⭐" if pm > 0 else "☀️ Matutino"
+            t_i = f"🌤️ Intermedio (+{pi:g}%) ⭐" if pi > 0 else "🌤️ Intermedio"
+            t_v = f"🌙 Vespertino (+{pv:g}%) ⭐" if pv > 0 else "🌙 Vespertino"
+            
+            filas_maestras.append({"Día": n_dia, "Turno": t_m, "⭐️ Supervisor": int(res['M'][4]), "🖥️ Caja": int(res['M'][3]), "🍳 Cocinero": int(res['M'][0]), "🍔 Vendedor": int(res['M'][1]), "🍺 Barra": int(res['M'][2]), "📦 Empacador": int(res['M'][6]), "🧹 Auxiliar": int(res['M'][7]), "🛎️ Hostes": int(res['M'][5]), "Costo del Día": f"$ {res['Costo']:,.2f}"})
+            filas_maestras.append({"Día": n_dia, "Turno": t_i, "⭐️ Supervisor": int(res['I'][4]), "🖥️ Caja": int(res['I'][3]), "🍳 Cocinero": int(res['I'][0]), "🍔 Vendedor": int(res['I'][1]), "🍺 Barra": int(res['I'][2]), "📦 Empacador": int(res['I'][6]), "🧹 Auxiliar": int(res['I'][7]), "🛎️ Hostes": int(res['I'][5]), "Costo del Día": "---"})
+            filas_maestras.append({"Día": n_dia, "Turno": t_v, "⭐️ Supervisor": int(res['V'][4]), "🖥️ Caja": int(res['V'][3]), "🍳 Cocinero": int(res['V'][0]), "🍔 Vendedor": int(res['V'][1]), "🍺 Barra": int(res['V'][2]), "📦 Empacador": int(res['V'][6]), "🧹 Auxiliar": int(res['V'][7]), "🛎️ Hostes": int(res['V'][5]), "Costo del Día": "---"})
             
         t_sup = sum(f['⭐️ Supervisor'] for f in filas_maestras); t_caj = sum(f['🖥️ Caja'] for f in filas_maestras); t_coc = sum(f['🍳 Cocinero'] for f in filas_maestras); t_ven = sum(f['🍔 Vendedor'] for f in filas_maestras); t_bar = sum(f['🍺 Barra'] for f in filas_maestras); t_emp = sum(f['📦 Empacador'] for f in filas_maestras); t_aux = sum(f['🧹 Auxiliar'] for f in filas_maestras); t_hos = sum(f['🛎️ Hostes'] for f in filas_maestras)
         filas_maestras.append({"Día": "📌 TOTAL SEMANA", "Turno": "---", "⭐️ Supervisor": t_sup, "🖥️ Caja": t_caj, "🍳 Cocinero": t_coc, "🍔 Vendedor": t_ven, "🍺 Barra": t_bar, "📦 Empacador": t_emp, "🧹 Auxiliar": t_aux, "🛎️ Hostes": t_hos, "Costo del Día": f"$ {c_tot:,.2f}"})
@@ -901,168 +751,96 @@ with tab_semanal:
         dias_alternos = ["Domingo", "Martes", "Jueves", "Sábado"]
         def color_filas(row):
             dia_str = str(row['Día'])
+            turno_str = str(row['Turno'])
             if "📌 TOTAL" in dia_str: return ['background-color: #FF9800; color: white; font-weight: bold;'] * len(row) 
-            elif "⭐" in dia_str: return ['background-color: rgba(255, 215, 0, 0.25)'] * len(row) 
+            elif "⭐" in turno_str: return ['background-color: rgba(255, 215, 0, 0.25); font-weight: bold;'] * len(row) 
             elif any(d in dia_str for d in dias_alternos): return ['background-color: rgba(130, 130, 130, 0.20)'] * len(row) 
             else: return [''] * len(row) 
-        
         st.dataframe(df_maestra.style.set_properties(**{'text-align': 'center'}).apply(color_filas, axis=1), height=830, use_container_width=False, hide_index=True, column_config={"Día": st.column_config.TextColumn("Día", width=250)})
-       
-       # --- AUDITORÍA QUIRÚRGICA DE CELDAS (INSPECTOR TURNO POR TURNO) ---
+
+        # --- AUDITORÍA QUIRÚRGICA DE CELDAS ---
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("### 🔍 Auditoría Celda por Celda: ¿Por qué Simplex dio este número?")
-        st.write("Elige las coordenadas exactas de cualquier celda de tu *Tabla Maestra Semanal* para auditar su justificación matemática:")
+        st.markdown("### 📊 Auditoría Visual de Carga Operativa y Empalmes (Celda por Celda)")
         
         c_sel1, c_sel2, c_sel3 = st.columns(3)
-        with c_sel1:
-            dia_aud = st.selectbox("📅 1. Día de la Semana:", dias_semana, key="aud_dia_sem")
-        with c_sel2:
-            turno_aud = st.selectbox("🕒 2. Turno a auditar:", ["☀️ Matutino (10-18)", "🌤️ Intermedio (14-22)", "🌙 Vespertino (17-01)"], key="aud_turno_sem")
-        with c_sel3:
-            puesto_aud = st.selectbox("🎯 3. Puesto a auditar:", ["🍳 Cocinero", "🍔 Vendedor", "🍺 Barra", "🖥️ Caja", "⭐️ Supervisor", "🛎️ Hostes", "📦 Empacador", "🧹 Auxiliar"], key="aud_puesto_sem")
+        with c_sel1: dia_aud = st.selectbox("📅 1. Día de la Semana:", dias_semana, key="aud_dia_sem")
+        with c_sel2: turno_aud = st.selectbox("🕒 2. Turno a auditar:", ["☀️ Matutino (10-18)", "🌤️ Intermedio (14-22)", "🌙 Vespertino (17-01)"], key="aud_turno_sem")
+        with c_sel3: puesto_aud = st.selectbox("🎯 3. Puesto a auditar:", ["🍳 Cocinero", "🍔 Vendedor", "🍺 Barra", "🖥️ Caja", "⭐️ Supervisor", "🛎️ Hostes", "📦 Empacador", "🧹 Auxiliar"], key="aud_puesto_sem")
             
-        # Mapeo de índices y variables
         res_dia = st.session_state['resultados_diarios'][dia_aud]
         map_idx = {"🍳 Cocinero": 0, "🍔 Vendedor": 1, "🍺 Barra": 2, "🖥️ Caja": 3, "⭐️ Supervisor": 4, "🛎️ Hostes": 5, "📦 Empacador": 6, "🧹 Auxiliar": 7}
         t_key = 'M' if 'Matutino' in turno_aud else ('I' if 'Intermedio' in turno_aud else 'V')
         idx_rol = map_idx[puesto_aud]
         gente_celda = int(res_dia[t_key][idx_rol])
         
-        if idx_rol in [0, 1, 2]:  # Puestos Operativos
+        if idx_rol in [0, 1, 2]:  
             rol_nombre = ["Cocina", "Salon", "Barra"][idx_rol]
             cap_val = [c_coc, c_sal, c_bar][idx_rol]
+            cap_promedio = cap_val * factor_fatiga_mult  
+            cap_fin = cap_val * (1.0 - (fatiga_pct / 100.0))
+            
             blk_indices = [0, 1, 2] if t_key == 'M' else ([1, 2, 3] if t_key == 'I' else [2, 3, 4])
             cmds_turno = sum(res_dia['demanda_bruta'][rol_nombre][i] for i in blk_indices)
             extras_db = {'Cocina': st.session_state.db['demanda'][dia_aud]['ec'], 'Salon': st.session_state.db['demanda'][dia_aud]['es'], 'Barra': st.session_state.db['demanda'][dia_aud]['eb']}
             extras_turno = sum(extras_db[rol_nombre][i] for i in blk_indices)
-            hrs_pura = round(cmds_turno / cap_val, 1) if cap_val > 0 else 0
+            
+            hrs_pura = round(cmds_turno / cap_promedio, 1) if cap_promedio > 0 else 0
             hrs_totales = round(hrs_pura + extras_turno, 1)
+            hrs_autonomas = gente_celda * 8
+            cap_comandas_autonoma = gente_celda * 8 * cap_promedio
+            pct_saturacion = round((hrs_totales / hrs_autonomas) * 100, 1) if hrs_autonomas > 0 else 0
             
-# --- Lógica de explicación "Nivel Primaria" sobre el empalme de turnos ---
-            if hrs_totales > (gente_celda * 8):
-                explicacion_empalme = f"""
-<div style="background-color: #FFF3E0; border: 2px solid #FF9800; border-radius: 10px; padding: 15px; margin-top: 15px;">
-<p style="margin: 0 0 10px 0; font-size: 16px; color: #D65A31; font-weight: bold;">🧩 Explicación Fácil (Nivel Primaria): ¿Por qué pide {gente_celda} persona(s) si hay {hrs_totales} horas de trabajo?</p>
-<p style="margin: 0 0 8px 0; font-size: 14px; color: #333;"><b>¡Porque los turnos no trabajan solos, se empalman para ayudarse!</b></p>
-<ul style="margin: 0 0 12px 20px; padding: 0; font-size: 14px; color: #333; line-height: 1.6;">
-<li><b>1. Las horas tranquilas:</b> Al abrir el restaurante (10:00 am a 2:00 pm), hay pocos clientes. <b>{gente_celda} persona(s)</b> en este turno son más que suficientes para abrir y atender sin problema.</li>
-<li><b>2. ¡Llegan los refuerzos!</b> A las 2:00 pm, cuando empieza la hora pesada de la comida ("El Rush"), <b>entran a trabajar los compañeros del turno Intermedio</b>. Y a las 5:00 pm entran los del Vespertino.</li>
-<li><b>3. El trabajo se reparte:</b> Las horas pesadas que faltaban por hacer ({round(hrs_totales - (gente_celda * 8), 1)} hrs sobrantes) <b>no las hace la persona de la mañana sola</b>, sino que se las reparten los refuerzos que acaban de llegar a ayudar a la cocina o al salón.</li>
-</ul>
-<p style="margin: 0; font-size: 14px; color: #222; background-color: #FFE0B2; padding: 10px; border-radius: 6px;">👉 <b>En resumen:</b> Simplex es tan inteligente que no te hace contratar a otra persona en la mañana para que esté parada sin hacer nada. Deja al personal justo para abrir y <b>las horas pesadas se absorben entre todos cuando los turnos se juntan en la tarde</b>. ¡Cero desperdicio de dinero!</p>
-</div>"""
+            bar_color = "#2CA02C" if pct_saturacion <= 100 else "#FF7F0E"
+            bar_width = min(pct_saturacion, 100)
+            
+            if hrs_totales > hrs_autonomas:
+                hrs_remanente = round(hrs_totales - hrs_autonomas, 1)
+                cmds_remanente = round(hrs_remanente * cap_promedio, 0)
+                txt_empalme = f"""<div style="background-color: #FFF8E1; border-left: 5px solid #FF8F00; padding: 15px; border-radius: 8px; margin-top: 15px;">
+<p style="margin: 0 0 8px 0; font-size: 15px; color: #B36B00; font-weight: bold;">🔄 Dictamen de Cobertura mediante Empalme Operativo</p>
+<p style="margin: 0; font-size: 14px; color: #333; line-height: 1.6;">El volumen requiere <b>{hrs_totales} horas-hombre</b>. La capacidad del personal asignado cubre <b>{hrs_autonomas} horas</b>.<br>👉 <b>Justificación Financiera:</b> El algoritmo mantiene la nómina ajustada en las horas de apertura/cierre de baja demanda. Las <b>{hrs_remanente} horas excedentes</b> ({cmds_remanente:,.0f} comandas) durante el "Rush" son absorbidas por el personal del turno posterior que se integra a la operación (Empalme de Turnos).</p></div>"""
             else:
-                explicacion_empalme = f"""
-<p style="margin: 10px 0 0 0; font-size: 14px; color: #222;">
-👉 Como cada colaborador trabaja un bloque de 8 horas y la carga total de este turno es de <b>{hrs_totales} horas</b>, Simplex calculó que necesitas exactamente a <b>{gente_celda} empleado(s) físico(s)</b> en este horario para sacar la producción sin retrasos ni sobrecargar al personal.
-</p>"""
+                txt_empalme = f"""<div style="background-color: #E8F5E9; border-left: 5px solid #2E7D32; padding: 15px; border-radius: 8px; margin-top: 15px;"><p style="margin: 0; font-size: 14px; color: #1B5E20; line-height: 1.6;">✅ <b>Dictamen de Cobertura Autónoma:</b> El personal asignado cubre el 100% de la demanda ({hrs_totales} horas requeridas) manteniendo un margen operativo sano.</p></div>"""
 
-            html_celda = f"""<div style="background-color: #FFFFFF; border: 2px solid #1F77B4; border-radius: 15px; padding: 25px; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
-<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #EEE; padding-bottom: 15px; margin-bottom: 20px;">
-<div>
-<span style="font-size: 13px; color: #666; font-weight: bold; text-transform: uppercase;">DESGLOSE OPERATIVO DE CELDA</span>
-<h4 style="margin: 4px 0 0 0; color: #1F77B4; font-size: 22px;">{puesto_aud} | {dia_aud} - {turno_aud}</h4>
-</div>
-<div style="background-color: #1F77B4; color: white; padding: 12px 25px; border-radius: 12px; text-align: center;">
-<span style="font-size: 11px; display: block; text-transform: uppercase; letter-spacing: 1px;">Simplex Asignó</span>
-<strong style="font-size: 24px;">{gente_celda} Persona(s)</strong>
-</div>
-</div>
-<div style="display: flex; gap: 15px; margin-bottom: 20px;">
-<div style="flex: 1; background-color: #F8F9FA; padding: 15px; border-radius: 10px; border: 1px solid #E9ECEF; text-align: center;">
-<span style="font-size: 12px; color: #666; font-weight: bold;">VOLUMEN ESPERADO</span>
-<div style="font-size: 18px; font-weight: bold; color: #222; margin-top: 5px;">🔥 {cmds_turno:,.0f} Comandas</div>
-</div>
-<div style="flex: 1; background-color: #F8F9FA; padding: 15px; border-radius: 10px; border: 1px solid #E9ECEF; text-align: center;">
-<span style="font-size: 12px; color: #666; font-weight: bold;">VELOCIDAD CONFIGURADA</span>
-<div style="font-size: 18px; font-weight: bold; color: #1F77B4; margin-top: 5px;">⚡ {cap_val} cmds / hora</div>
-</div>
-<div style="flex: 1; background-color: #F8F9FA; padding: 15px; border-radius: 10px; border: 1px solid #E9ECEF; text-align: center;">
-<span style="font-size: 12px; color: #666; font-weight: bold;">EXTRAS / PREPARACIÓN</span>
-<div style="font-size: 18px; font-weight: bold; color: #D62728; margin-top: 5px;">⏱️ +{extras_turno} Horas</div>
-</div>
-</div>
-<div style="background-color: #E8F4F8; padding: 18px; border-radius: 10px; border-left: 5px solid #1F77B4;">
-<p style="margin: 0; font-size: 15px; color: #222; line-height: 1.6;">
-💡 <b>Explicación Matemática de esta Celda:</b><br>
-Para procesar las <b>{cmds_turno:,.0f} comandas</b> del turno <b>{turno_aud}</b> a un ritmo de <b>{cap_val} cmds/hora</b> (más {extras_turno} hrs extra), el restaurante consume un total de <b>{hrs_totales} horas-hombre</b>.
-</p>
-{explicacion_empalme}
-</div>
-</div>"""
-            st.markdown(html_celda, unsafe_allow_html=True)
+            st.markdown(f"""<div style="background-color: #FFFFFF; border: 2px solid #1F77B4; border-radius: 15px; padding: 25px; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #EEE; padding-bottom: 15px; margin-bottom: 20px;"><div><span style="font-size: 13px; color: #666; font-weight: bold; text-transform: uppercase;">RADIOGRAFÍA OPERATIVA DE CELDA (CON FACTOR DE FATIGA)</span><h4 style="margin: 4px 0 0 0; color: #1F77B4; font-size: 22px;">{puesto_aud} | {dia_aud} - {turno_aud}</h4></div>
+<div style="background-color: #1F77B4; color: white; padding: 12px 25px; border-radius: 12px; text-align: center;"><span style="font-size: 11px; display: block; text-transform: uppercase; letter-spacing: 1px;">Personal Asignado</span><strong style="font-size: 24px;">{gente_celda} Colaborador(es)</strong></div></div>
+<div style="display: flex; gap: 15px; margin-bottom: 20px;"><div style="flex: 1; background-color: #F8F9FA; padding: 15px; border-radius: 10px; border: 1px solid #E9ECEF; text-align: center;"><span style="font-size: 12px; color: #666; font-weight: bold;">DEMANDA ESPERADA</span><div style="font-size: 18px; font-weight: bold; color: #222; margin-top: 5px;">🔥 {cmds_turno:,.0f} Cmds</div></div>
+<div style="flex: 1; background-color: #F8F9FA; padding: 15px; border-radius: 10px; border: 1px solid #E9ECEF; text-align: center;"><span style="font-size: 11px; color: #666; font-weight: bold;">DESGASTE HUMANO (-{fatiga_pct/2:.1f}% PROM.)</span><div style="font-size: 15px; font-weight: bold; color: #1F77B4; margin-top: 5px;">⚡ {cap_val} ➔ {cap_fin:.1f} cmds/hr</div></div>
+<div style="flex: 1; background-color: #F8F9FA; padding: 15px; border-radius: 10px; border: 1px solid #E9ECEF; text-align: center;"><span style="font-size: 12px; color: #666; font-weight: bold;">CAPACIDAD AUTÓNOMA (REAL)</span><div style="font-size: 18px; font-weight: bold; color: #2CA02C; margin-top: 5px;">🛡️ {cap_comandas_autonoma:,.0f} Cmds</div></div></div>
+<div style="margin-bottom: 15px;"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #444; margin-bottom: 5px;"><span>ÍNDICE DE CARGA DEL TURNO (DEMANDA VS CAPACIDAD REAL):</span><span style="color: {bar_color};">{pct_saturacion}%</span></div>
+<div style="background-color: #E9ECEF; border-radius: 10px; width: 100%; height: 16px; overflow: hidden; border: 1px solid #CCC;"><div style="background-color: {bar_color}; width: {bar_width}%; height: 100%;"></div></div></div>{txt_empalme}</div>""", unsafe_allow_html=True)
             
-        else:  # Puestos Estructurales Fijos
+        else:  
             estado_txt = "ACTIVADO (Sí)" if gente_celda > 0 else "DESACTIVADO (No)"
             color_est = "#2CA02C" if gente_celda > 0 else "#666666"
-            html_fijo = f"""<div style="background-color: #FFF9C4; border: 2px solid #FBC02D; border-radius: 15px; padding: 25px; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
-<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #FCE588; padding-bottom: 15px; margin-bottom: 20px;">
-<div>
-<span style="font-size: 13px; color: #8C6B00; font-weight: bold; text-transform: uppercase;">DIAGNÓSTICO DE PUESTO ESTRUCTURAL</span>
-<h4 style="margin: 4px 0 0 0; color: #B38600; font-size: 22px;">{puesto_aud} | {dia_aud} - {turno_aud}</h4>
-</div>
-<div style="background-color: {color_est}; color: white; padding: 12px 25px; border-radius: 12px; text-align: center;">
-<span style="font-size: 11px; display: block; text-transform: uppercase; letter-spacing: 1px;">Asignación</span>
-<strong style="font-size: 24px;">{gente_celda} Persona(s)</strong>
-</div>
-</div>
-<p style="margin: 0; font-size: 15px; color: #222; line-height: 1.6;">
-📌 <b>Explicación de esta Celda:</b><br>
-El puesto de <b>{puesto_aud}</b> es una posición <b>Estructural Fija</b>. Su cantidad no se calcula dividiendo comandas ni ventas, sino que depende de la estructura organizativa de tu restaurante.<br>
-El algoritmo auditó tu matriz de <b>"Personal Fijo (Turnos)"</b> para el día <b>{dia_aud}</b> en el turno <b>{turno_aud}</b> y confirmó que la asistencia estaba programada como: <b style="color: {color_est};">{estado_txt}</b>.<br>
-{'👉 El sistema asignó a 1 colaborador en esta celda para respetar tu estándar operativo y sumó su salario dentro del presupuesto.' if gente_celda > 0 else '👉 Al estar configurado como No (o por ser día de descanso del Supervisor), el sistema dejó la celda en 0 para no generar gastos innecesarios de nómina.'}
-</p>
-</div>"""
-            st.markdown(html_fijo, unsafe_allow_html=True)
+            st.markdown(f"""<div style="background-color: #FFF9C4; border: 2px solid #FBC02D; border-radius: 15px; padding: 25px; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #FCE588; padding-bottom: 15px; margin-bottom: 20px;"><div><span style="font-size: 13px; color: #8C6B00; font-weight: bold; text-transform: uppercase;">DIAGNÓSTICO DE PUESTO ESTRUCTURAL</span><h4 style="margin: 4px 0 0 0; color: #B38600; font-size: 22px;">{puesto_aud} | {dia_aud} - {turno_aud}</h4></div>
+<div style="background-color: {color_est}; color: white; padding: 12px 25px; border-radius: 12px; text-align: center;"><span style="font-size: 11px; display: block; text-transform: uppercase; letter-spacing: 1px;">Asignación</span><strong style="font-size: 24px;">{gente_celda} Persona(s)</strong></div></div>
+<p style="margin: 0; font-size: 15px; color: #222; line-height: 1.6;">📌 <b>Justificación de Puesto Estructural:</b><br>Esta posición opera bajo un criterio estructural. Su asignación depende de la matriz operativa dictada, no del volumen de comandas por hora.<br>👉 Para este bloque, la matriz indicó: <b style="color: {color_est};">{estado_txt}</b>.</p></div>""", unsafe_allow_html=True)
         st.markdown("---")
-       
-        # --- DICTAMEN EJECUTIVO DINÁMICO PARA DIRECCIÓN ---
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        st.markdown("### 🎯 Dictamen Ejecutivo: ¿De dónde salen los números?")
-        
-        # Extracción dinámica de datos en tiempo real
-        max_ven_dia = max([int(st.session_state['resultados_diarios'][d]['M'][1] + st.session_state['resultados_diarios'][d]['I'][1] + st.session_state['resultados_diarios'][d]['V'][1]) for d in dias_semana])
-        dia_pico_ven = [d for d in dias_semana if int(st.session_state['resultados_diarios'][d]['M'][1] + st.session_state['resultados_diarios'][d]['I'][1] + st.session_state['resultados_diarios'][d]['V'][1]) == max_ven_dia][0]
-        max_coc_dia = max([int(st.session_state['resultados_diarios'][d]['M'][0] + st.session_state['resultados_diarios'][d]['I'][0] + st.session_state['resultados_diarios'][d]['V'][0]) for d in dias_semana])
-        dia_pico_coc = [d for d in dias_semana if int(st.session_state['resultados_diarios'][d]['M'][0] + st.session_state['resultados_diarios'][d]['I'][0] + st.session_state['resultados_diarios'][d]['V'][0]) == max_coc_dia][0]
-        prom_ven = math.ceil(sum(f['🍔 Vendedor'] for f in filas_maestras[:-1]) / 6.0)
-        
-        html_dictamen = f"""<div style="background-color: #FFFFFF; border: 3px solid #1F77B4; border-radius: 15px; padding: 25px; color: #222; line-height: 1.6; box-shadow: 0 6px 12px rgba(0,0,0,0.08);">
-<div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px dashed #ccc; padding-bottom: 15px; margin-bottom: 20px;">
-<div>
-<h4 style="color: #1F77B4; margin: 0; font-size: 20px;">📊 Radiografía de la Nómina - Semana {st.session_state.get('selected_week', '')}</h4>
-<span style="font-size: 13px; color: #666;">Cálculo matemático optimizado para máxima rentabilidad y cobertura</span>
-</div>
-<div style="background-color: #EBF5FB; padding: 10px 15px; border-radius: 10px; text-align: center; border: 1px solid #1F77B4;">
-<span style="font-size: 12px; color: #555; display: block;">INVERSIÓN EN NÓMINA</span>
-<strong style="font-size: 18px; color: #1F77B4;">{pct:.1f}%</strong>
-</div>
-</div>
-<p style="font-size: 16px; margin-bottom: 10px;"><b>💰 1. LA BALANZA FINANCIERA (¿Cuánto hay y cuánto se gasta?)</b></p>
-<div style="background-color: #F8F9FA; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #2CA02C;">
-<p style="margin: 0;">🟢 <b>Venta Proyectada:</b> $ {v_tot:,.2f} <i>(Ingreso total esperado en la semana)</i></p>
-<p style="margin: 8px 0 0 0;">🔴 <b>Costo de Nómina:</b> $ {c_tot:,.2f} <i>(Sueldos exactos para operar sin fallas)</i></p>
-<p style="margin: 8px 0 0 0;">⚖️ <b>Resultado:</b> El costo representa el <b>{pct:.1f}%</b> de la venta. <b>El presupuesto alcanza perfectamente y está blindado dentro del límite financiero.</b></p>
-</div>
-<p style="font-size: 16px; margin-bottom: 10px;"><b>👥 2. ¿DE DÓNDE SALE EL NÚMERO DE PERSONAL? (Paso a Paso)</b></p>
-<div style="background-color: #FFF9C4; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #FBC02D;">
-<p style="margin: 0; font-weight: bold; color: #B38600;">El dilema: Promedio vs. Realidad Operativa</p>
-<p style="margin: 8px 0;">÷️⃣ <b>El Promedio (6x1):</b> Si sumamos todos los turnos de la semana y los dividimos entre 6 días de trabajo, el promedio nos pide contratar <b>{prom_ven} Vendedores</b>.</p>
-<p style="margin: 8px 0;">🔥 <b>El Día Crítico:</b> El algoritmo detecta que el día más pesado es el <b>{dia_pico_ven}</b>, donde el Rush exige tener físicamente a <b>{max_ven_dia} Vendedores simultáneos</b> (y en Cocina el <b>{dia_pico_coc}</b> exige <b>{max_coc_dia} Cocineros</b>).</p>
-<p style="margin: 8px 0 0 0; font-size: 15px;">👉 <b>LA DECISIÓN:</b> El sistema manda contratar el número del día crítico (<b>{max_ven_dia} Vendedores</b>). <i>¿Por qué no el promedio?</i> Porque si contratamos menos, el <b>{dia_pico_ven}</b> colapsaría el servicio o nos obligaría a pagar horas extra y turnos dobles que saldrían más caros que la nómina normal.</p>
-</div>
-<p style="font-size: 16px; margin-bottom: 10px;"><b>⏱️ 3. ¿POR QUÉ EN ESTOS HORARIOS? (Cero Desperdicio)</b></p>
-<div style="background-color: #F0F8FF; padding: 15px; border-radius: 10px; border-left: 5px solid #1F77B4;">
-<p style="margin: 0;">🚀 <b>Ataque al Rush (14:00 a 17:00 hrs):</b> Al cruzar los turnos Matutinos e Intermedios, logramos tener al 100% del equipo en el piso justo a la hora de la comida, cuando caen más comandas.</p>
-<p style="margin: 8px 0 0 0;">🌙 <b>Corte Nocturno:</b> A las 18:00 hrs, exactamente cuando baja la venta, el turno Matutino se va a su casa. <b>Se elimina el tiempo ocioso y no se paga ni una hora muerta en la noche.</b></p>
-</div>
-</div>"""
-        st.markdown(html_dictamen, unsafe_allow_html=True)
+
+# ==========================================
+# ⚖️ PESTAÑA 4: PLANTILLA IDEAL VS REAL (AJUSTE MÚLTIPLOS DE 6)
+# ==========================================
 with tab_ideal:
     if st.session_state['resultados_diarios'] is not None:
-        st.markdown("""<div style="background-color: #F3E5F5; padding: 15px; border-left: 5px solid #9C27B0; border-radius: 5px; margin-bottom: 20px;"><h4 style="margin-top: 0; color: #9C27B0;">🧠 Análisis Ejecutivo de Contratación (Plantilla Ideal)</h4><p style="font-size: 14px; color: #333;"><b>1. Operativos:</b> El sistema sumó todos los turnos que te pidió la "Plantilla Maestra Semanal" y los dividió entre 6 días. Al redondear matemáticamente hacia arriba (Regla 6x1), el algoritmo te dice exactamente el número de empleados que necesitas contratar para que tu restaurante cubra todos sus turnos <b>y al mismo tiempo garantices que todos descansen 1 día a la semana.</b><br><b>2. Estructurales Fijos:</b> El sistema respeta el límite de personal "Ideal" que tú configuraste en el panel lateral.</p></div>""", unsafe_allow_html=True)
+        st.markdown("""<div style="background-color: #F3E5F5; padding: 15px; border-left: 5px solid #9C27B0; border-radius: 5px; margin-bottom: 20px;"><h4 style="margin-top: 0; color: #9C27B0;">🧠 Análisis Ejecutivo de Contratación (Plantilla Ideal)</h4><p style="font-size: 14px; color: #333;"><b>1. Cálculo por Múltiplos de 6 Turnos:</b> El sistema suma el total de turnos semanales requeridos para cada puesto y los ajusta hacia arriba al múltiplo de 6 más cercano (Regla 6x1). De esta forma, se asigna exactly el personal necesario garantizando 1 día de descanso a la semana para todos.<br><b>2. Diagnóstico Financiero:</b> Compara la plantilla contratada hoy contra la plantilla ideal ajustada a múltiplos de 6.</p></div>""", unsafe_allow_html=True)
         st.subheader("⚖️ Análisis Financiero de Recursos Humanos")
-        ideal = st.session_state['plantilla_ideal']
+        
+        map_idx = {'Supervisor': 4, 'Caja': 3, 'Cocinero': 0, 'Vendedor': 1, 'Barra': 2, 'Empacador': 6, 'Auxiliar': 7, 'Hostes': 5}
+        puestos_orden = ['Supervisor', 'Caja', 'Cocinero', 'Vendedor', 'Barra', 'Empacador', 'Auxiliar', 'Hostes']
+        
+        ideal = {}
+        turnos_info = {}
+        for p in puestos_orden:
+            idx = map_idx[p]
+            t_tot = sum(int(st.session_state['resultados_diarios'][d]['M'][idx] + st.session_state['resultados_diarios'][d]['I'][idx] + st.session_state['resultados_diarios'][d]['V'][idx]) for d in dias_semana)
+            t_mult6 = math.ceil(t_tot / 6.0) * 6
+            ideal_p = t_mult6 // 6
+            ideal[p] = ideal_p
+            turnos_info[p] = (t_tot, t_mult6)
+        
         real = {'Supervisor': st.session_state.c_sup, 'Caja': st.session_state.c_caj, 'Cocinero': st.session_state.c_coc, 'Vendedor': st.session_state.c_sal, 'Barra': st.session_state.c_bar, 'Empacador': st.session_state.c_emp, 'Auxiliar': st.session_state.c_aux, 'Hostes': st.session_state.c_hos}
         
         fuga, ahorro = 0, 0
@@ -1074,9 +852,10 @@ with tab_ideal:
         col1, col2 = st.columns(2)
         col1.markdown(f'<div class="anim_fuga"><p style="margin:0; font-size:15px; color:#555;">🔴 FUGA DE DINERO (Exceso de Plantilla)</p><h2 style="margin:0; color:#333;">$ {fuga:,.2f} / sem</h2></div>', unsafe_allow_html=True)
         col2.markdown(f'<div class="anim_ahorro"><p style="margin:0; font-size:15px; color:#555;">🟡 AHORRO RIESGOSO (Falta de Plantilla)</p><h2 style="margin:0; color:#333;">$ {ahorro:,.2f} / sem</h2></div>', unsafe_allow_html=True)
-        st.write("<br>💡 **Nota Financiera:** Si tienes una **Fuga** 🔴, pagas nómina que no necesitas. Si tienes **Ahorro Riesgoso** 🟡, ahorras dinero, pero el personal está sobrecargado y el servicio corre peligro.", unsafe_allow_html=True)
+        st.write("<br>💡 **Nota Financiera:** El cálculo ideal se basa en turnos ajustados a múltiplos de 6 (cobertura 6x1 con 1 día de descanso). Si tienes una **Fuga** 🔴, pagas nómina sobrante. Si tienes **Ahorro Riesgoso** 🟡, falta personal para cubrir los turnos programados.", unsafe_allow_html=True)
         st.markdown("---")
         
+        # --- TARJETAS DE IMPACTO PUESTO POR PUESTO ---
         st.markdown("### 📋 Diagnóstico Detallado (Tarjetas de Impacto)")
         iconos = {'Supervisor': '⭐️', 'Caja': '🖥️', 'Cocinero': '🍳', 'Vendedor': '🍔', 'Barra': '🍺', 'Empacador': '📦', 'Auxiliar': '🧹', 'Hostes': '🛎️'}
         puestos = list(ideal.keys())
@@ -1084,11 +863,19 @@ with tab_ideal:
             cols = st.columns(4)
             for j in range(4):
                 if i + j < len(puestos):
-                    p = puestos[i + j]; dif = real[p] - ideal[p]; cost = abs(dif) * salarios_map[p] * 7
-                    if dif < 0: bg, text, border, est, msg, anim = "#FFFFE0", "#B38600", "#FFE680", f"Faltan {abs(dif)} persona(s)", f"🟡 Ahorro Riesgoso:<br>+\\$ {cost:,.2f} /sem", "anim_ahorro"
-                    elif dif > 0: bg, text, border, est, msg, anim = "#FFF0F0", "#CC0000", "#FFCCCC", f"Sobran {dif} persona(s)", f"🔴 Fuga:<br>-\\$ {cost:,.2f} /sem", "anim_fuga"
-                    else: bg, text, border, est, msg, anim = "#F0FFF0", "#008000", "#CCFFCC", "Plantilla Perfecta", f"🟢 Balance:<br>\\$ 0.00", ""
-                    cols[j].markdown(f'<div class="{anim}" style="background-color: {bg}; border: 1px solid {border}; border-radius: 10px; padding: 15px; min-height: 160px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 15px;"><h4 style="margin: 0 0 10px 0; color: #333; font-size: 17px; line-height: 1.2;">{iconos[p]} {p}</h4><p style="margin: 0 0 5px 0; font-size: 14px; color: #333; line-height: 1.2;"><b>{est}</b></p><p style="margin: 0 0 10px 0; font-size: 12px; color: #666; line-height: 1.2;">(Ideal: {ideal[p]} | Tienes: {real[p]})</p><h5 style="margin: 0; color: {text}; font-size: 16px; line-height: 1.4;">{msg}</h5></div>', unsafe_allow_html=True)
+                    p = puestos[i + j]
+                    dif = real[p] - ideal[p]
+                    cost = abs(dif) * salarios_map[p] * 7
+                    t_tot, t_mult6 = turnos_info[p]
+                    
+                    if dif < 0:
+                        bg, text, border, est, msg, anim = "#FFFFE0", "#B38600", "#FFE680", f"Faltan {abs(dif)} persona(s)", f"🟡 Ahorro Riesgoso:<br>+\\$ {cost:,.2f} /sem", "anim_ahorro"
+                    elif dif > 0:
+                        bg, text, border, est, msg, anim = "#FFF0F0", "#CC0000", "#FFCCCC", f"Sobran {dif} persona(s)", f"🔴 Fuga:<br>-\\$ {cost:,.2f} /sem", "anim_fuga"
+                    else:
+                        bg, text, border, est, msg, anim = "#F0FFF0", "#008000", "#CCFFCC", "Plantilla Perfecta", f"🟢 Balance:<br>\\$ 0.00", ""
+                    
+                    cols[j].markdown(f'<div class="{anim}" style="background-color: {bg}; border: 1px solid {border}; border-radius: 10px; padding: 15px; min-height: 180px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 15px;"><h4 style="margin: 0 0 5px 0; color: #333; font-size: 17px; line-height: 1.2;">{iconos[p]} {p}</h4><p style="margin: 0 0 3px 0; font-size: 13px; color: #333; line-height: 1.2;"><b>{est}</b></p><p style="margin: 0 0 3px 0; font-size: 12px; color: #555; line-height: 1.2;">(Ideal: {ideal[p]} | Tienes: {real[p]})</p><p style="margin: 0 0 8px 0; font-size: 11px; color: #777; line-height: 1.1;">Turnos: {t_tot} ➔ Múltiplo 6: {t_mult6}</p><h5 style="margin: 0; color: {text}; font-size: 15px; line-height: 1.3;">{msg}</h5></div>', unsafe_allow_html=True)
 
         st.markdown("---"); st.markdown("### 📊 Comparativo Gráfico (Ideal vs Real)")
         nombres_con_icono = [f"{iconos[p]} {p}" for p in ideal.keys()]
@@ -1096,4 +883,4 @@ with tab_ideal:
         fig_rh = px.bar(df_rh, x='Puesto', y='Empleados', color='Tipo', barmode='group', text_auto=True, color_discrete_map={'1. Plantilla IDEAL (Requerida)': '#1f77b4', '2. Plantilla REAL (Contratada)': '#ff7f0e'})
         fig_rh.update_layout(legend_title=None, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         st.plotly_chart(fig_rh, use_container_width=True)
-        st.markdown("""<div style="background-color: #FFF9C4; padding: 15px; border-left: 5px solid #FBC02D; border-radius: 8px; margin-top: 5px; margin-bottom: 25px;"><h5 style="margin-top: 0; color: #B38600;">💡 Guía rápida</h5><p style="font-size: 14px; color: #333; margin: 0;">Permite comparar visualmente el tamaño actual de tu equipo (Naranja) contra la estructura que las matemáticas exigen para operar perfectamente (Azul).</p></div>""", unsafe_allow_html=True)
+        st.markdown("""<div style="background-color: #FFF9C4; padding: 15px; border-left: 5px solid #FBC02D; border-radius: 8px; margin-top: 5px; margin-bottom: 25px;"><h5 style="margin-top: 0; color: #B38600;">💡 Guía rápida</h5><p style="font-size: 14px; color: #333; margin: 0;">Permite comparar visualmente el tamaño actual de tu equipo (Naranja) contra la estructura en múltiplos de 6 turnos (Azul).</p></div>""", unsafe_allow_html=True)
