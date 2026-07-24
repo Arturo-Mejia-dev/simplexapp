@@ -83,12 +83,22 @@ bloques = ["10:00 a 14:00 (4 hrs)", "14:00 a 17:00 (3 hrs)", "17:00 a 18:00 (1 h
 horas_por_bloque = [4, 3, 1, 4, 3]
 puestos_fijos = ['Supervisor', 'Caja', 'Hostes', 'Empacador', 'Auxiliar']
 
+# 🔥 FUNCIÓN AUXILIAR PARA PLANTILLAS DE HORAS POR DEFECTO 🔥
+def crear_plantilla_defecto():
+    return [{"Día": d, "Bloque": b, "🍳 Cocina": 0.0, "🍔 Salón": 0.0, "🍺 Barra": 0.0} for d in dias_semana for b in bloques]
+
 DEFAULT_CONFIG = {
     's_coc': 350.0, 's_ven': 300.0, 's_bar': 320.0, 's_sup': 500.0, 's_caj': 300.0, 's_hos': 250.0, 's_emp': 250.0, 's_aux': 250.0, 
     'c_coc': 8, 'c_sal': 12, 'c_bar': 15,
     'fatiga_pct': 15.0,  
     'esp_pct': {d: {'M': 0.0, 'I': 0.0, 'V': 0.0} for d in dias_semana}, 
-    'ideal_sup': 2, 'ideal_caj': 3, 'ideal_hos': 3, 'ideal_emp': 2, 'ideal_aux': 2 
+    'ideal_sup': 2, 'ideal_caj': 3, 'ideal_hos': 3, 'ideal_emp': 2, 'ideal_aux': 2,
+    # 🔥 NUEVA SECCIÓN DE PLANTILLAS PRECONFIGURADAS POR TIPO DE SUCURSAL 🔥
+    'plantillas_horas': {
+        'Tipo A': crear_plantilla_defecto(),
+        'Tipo B': crear_plantilla_defecto(),
+        'Tipo C': crear_plantilla_defecto()
+    }
 }
 
 def consultarSimplex(ids,fi,ff):
@@ -140,6 +150,14 @@ def load_config():
             json_data = json.loads(data)
             if 'esp_pct' not in json_data or not isinstance(json_data['esp_pct'], dict) or (len(json_data['esp_pct']) > 0 and not isinstance(list(json_data['esp_pct'].values())[0], dict)):
                 json_data['esp_pct'] = {d: {'M': 0.0, 'I': 0.0, 'V': 0.0} for d in dias_semana}
+            
+            # Asegurar que existan plantillas de horas si no estaban antes
+            if 'plantillas_horas' not in json_data or not isinstance(json_data['plantillas_horas'], dict):
+                json_data['plantillas_horas'] = {
+                    'Tipo A': crear_plantilla_defecto(),
+                    'Tipo B': crear_plantilla_defecto(),
+                    'Tipo C': crear_plantilla_defecto()
+                }
             
             for k, v in DEFAULT_CONFIG.items():
                 if k not in json_data: json_data[k] = v
@@ -206,7 +224,6 @@ def clear_all_fijos(puesto):
     st.session_state.df_fijos_dict[puesto]['Vespertino'] = False
     st.session_state[f'counter_{puesto}'] += 1
 
-# --- 🔥 FUNCIÓN QUIRÚRGICA MODIFICADA PARA MULTISELECCIÓN DE ÁREA 🔥 ---
 def inyectar_horas_extra(dias_in, turno_in, areas_in, hrs_in):
     df = st.session_state.df_demanda
     if "Todos" in dias_in or not dias_in:
@@ -224,7 +241,6 @@ def inyectar_horas_extra(dias_in, turno_in, areas_in, hrs_in):
     b_exacto = mapa_bloques.get(turno_in, "10:00 a 14:00 (4 hrs)")
     
     cols_target = []
-    # Si seleccionan "Todas" o dejan el campo vacío, aplica a los 3 puestos operativos
     if "Todas" in areas_in or not areas_in:
         cols_target = ["🍳 Extra Cocina", "🍔 Extra Salón", "🍺 Extra Barra"]
     else:
@@ -307,9 +323,20 @@ with st.sidebar:
             ])
             edited_esp = st.data_editor(df_esp_inicial, hide_index=True, use_container_width=True)
             new_esp = {row['Día']: {'M': float(row['☀️ Matutino']), 'I': float(row['🌤️ Intermedio']), 'V': float(row['🌙 Vespertino'])} for _, row in edited_esp.iterrows()}
+        
+        # 🔥 NUEVO EXPANDER: CONSTRUCTOR DE PLANTILLAS DE HORAS POR TIPO DE SUCURSAL 🔥
+        with st.expander("🏗️ Plantillas de Horas Extra (Por Tipo)"):
+            st.write("Configura las horas extra predeterminadas por bloque y área:")
+            tipos_suc = list(config_data.get('plantillas_horas', {}).keys())
+            tipo_edit = st.selectbox("Clasificación de Sucursal a editar:", tipos_suc, key="sel_tipo_edit")
+            plantilla_actual = config_data.get('plantillas_horas', {}).get(tipo_edit, crear_plantilla_defecto())
+            df_edit_pl = pd.DataFrame(plantilla_actual)
+            edited_pl = st.data_editor(df_edit_pl, hide_index=True, use_container_width=True, height=300, key=f"editor_pl_{tipo_edit}")
+            new_plantillas = config_data.get('plantillas_horas', {}).copy()
+            new_plantillas[tipo_edit] = edited_pl.to_dict(orient="records")
                 
         if st.button("🔒 Guardar y Bloquear", type="primary"):
-            config_data.update({'s_coc': new_s_coc, 's_ven': new_s_ven, 's_bar': new_s_bar, 's_sup': new_s_sup, 's_caj': new_s_caj, 's_hos': new_s_hos, 's_emp': new_s_emp, 's_aux': new_s_aux, 'c_coc': new_c_coc, 'c_sal': new_c_sal, 'c_bar': new_c_bar, 'fatiga_pct': new_fatiga, 'esp_pct': new_esp, 'ideal_sup': new_ideal_sup, 'ideal_caj': new_ideal_caj, 'ideal_hos': new_ideal_hos, 'ideal_emp': new_ideal_emp, 'ideal_aux': new_ideal_aux})
+            config_data.update({'s_coc': new_s_coc, 's_ven': new_s_ven, 's_bar': new_s_bar, 's_sup': new_s_sup, 's_caj': new_s_caj, 's_hos': new_s_hos, 's_emp': new_s_emp, 's_aux': new_s_aux, 'c_coc': new_c_coc, 'c_sal': new_c_sal, 'c_bar': new_c_bar, 'fatiga_pct': new_fatiga, 'esp_pct': new_esp, 'ideal_sup': new_ideal_sup, 'ideal_caj': new_ideal_caj, 'ideal_hos': new_ideal_hos, 'ideal_emp': new_ideal_emp, 'ideal_aux': new_ideal_aux, 'plantillas_horas': new_plantillas})
             save_config(config_data)
             st.session_state['config_unlocked'] = False
             st.rerun()
@@ -460,8 +487,30 @@ with tab_carga:
                 )
         
     with t_dem:
-        # --- 🔥 MEJORA QUIRÚRGICA: MULTISELECCIÓN EN ÁREAS, DÍAS Y HORARIOS 🔥 ---
-        st.markdown("#### ⚡ Panel de Asignación Rápida (Horas Extra)")
+        # --- 🔥 NUEVA SECCIÓN: PRECARGAR PLANTILLA POR TIPO DE SUCURSAL 🔥 ---
+        st.markdown("#### 🏗️ Precargar Plantilla Automática por Tipo de Sucursal")
+        st.write("Carga en 1 clic todas las horas extra preconfiguradas para toda la semana según la clasificación de la sucursal:")
+        c_p1, c_p2 = st.columns([3, 1])
+        with c_p1:
+            tipos_disp = list(config_data.get('plantillas_horas', {}).keys())
+            tipo_sel = st.selectbox("Clasificación de Sucursal:", ["-- Seleccionar Tipo --"] + tipos_disp, label_visibility="collapsed")
+        with c_p2:
+            if st.button("🚀 Aplicar Plantilla", type="primary", use_container_width=True):
+                if tipo_sel != "-- Seleccionar Tipo --" and tipo_sel in config_data.get('plantillas_horas', {}):
+                    plantilla = config_data['plantillas_horas'][tipo_sel]
+                    df_plantilla = pd.DataFrame(plantilla)
+                    df = st.session_state.df_demanda
+                    for idx, row in df_plantilla.iterrows():
+                        mask = (df['Día'] == row['Día']) & (df['Bloque'] == row['Bloque'])
+                        df.loc[mask, '🍳 Extra Cocina'] = float(row.get('🍳 Cocina', 0.0))
+                        df.loc[mask, '🍔 Extra Salón'] = float(row.get('🍔 Salón', 0.0))
+                        df.loc[mask, '🍺 Extra Barra'] = float(row.get('🍺 Barra', 0.0))
+                    st.session_state['counter_demanda'] += 1
+                    st.rerun()
+
+        st.markdown("---")
+        # --- PANEL MANUAL DE ASIGNACIÓN RÁPIDA ---
+        st.markdown("#### ⚡ Panel de Asignación Rápida (Horas Extra Manuales)")
         c_i1, c_i2, c_i3, c_i4, c_i5, c_i6 = st.columns([2, 2, 2, 1, 1.5, 1.5])
         with c_i1: 
             dias_qa = st.multiselect("📅 Día(s)", ["Todos"] + dias_semana, default=["Todos"], placeholder="Elige día(s)...")
